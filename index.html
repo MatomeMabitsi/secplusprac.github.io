@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Security+ SY0-701 — 100-question interactive quiz</title>
+  <style>
+    :root {
+      --bg:#0f1724; --card:#0b1220; --accent:#7dd3fc; --muted:#94a3b8;
+      --optionText:#ffffff; --correct:#1aa96f; --wrong:#e24b4b;
+    }
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+    body{background:linear-gradient(180deg,#071226 0%, #071025 60%);color:#e6eef6;display:flex;align-items:center;justify-content:center;padding:20px}
+    .container{width:100%;max-width:980px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:12px;padding:18px;box-shadow:0 8px 30px rgba(2,6,23,0.7)}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    h1{font-size:18px;margin:0}
+    .meta{color:var(--muted);font-size:13px}
+    .card{background:var(--card);border-radius:10px;padding:18px;margin-top:12px}
+    .q-number{font-weight:600;color:var(--accent)}
+    .question{font-size:16px;margin:8px 0 16px}
+    .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .choice{color:var(--optionText);background:#071827;border:1px solid rgba(255,255,255,0.03);padding:12px;border-radius:8px;cursor:pointer;transition:transform .08s ease,box-shadow .08s ease;text-align:left}
+    .choice:hover{transform:translateY(-2px)}
+    .choice.disabled{cursor:default;opacity:0.9}
+    .choice.correct{border-color:rgba(34,197,94,0.9);box-shadow:0 6px 18px rgba(34,197,94,0.06)}
+    .choice.wrong{border-color:rgba(226,75,75,0.95);box-shadow:0 6px 18px rgba(226,75,75,0.06)}
+    .explanation{margin-top:12px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px;color:var(--muted);font-size:14px}
+    .controls{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:16px}
+    .left{display:flex;gap:12px;align-items:center}
+    button{background:var(--accent);border:0;padding:8px 12px;border-radius:8px;color:#012;cursor:pointer;font-weight:700}
+    button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    .progress{height:8px;background:#061018;border-radius:999px;overflow:hidden;flex:1}
+    .bar{height:8px;background:linear-gradient(90deg,var(--accent),#60a5fa);width:0%}
+    .score{font-weight:700}
+    footer{margin-top:14px;color:var(--muted);font-size:13px;text-align:center}
+    @media (max-width:640px){.choices{grid-template-columns:1fr}.container{padding:14px}}
+  </style>
+</head>
+<body>
+  <div class="container" role="main">
+    <header>
+      <div>
+        <h1>Security+ SY0-701 — 100-question practice quiz</h1>
+        <div class="meta">Immediate feedback — select an answer to reveal correct answer and explanation</div>
+      </div>
+      <div class="meta">Questions: <span id="total">100</span></div>
+    </header>
+
+    <div class="card">
+      <div><span class="q-number">Question <span id="qIdx">1</span> / <span id="qTotal">100</span></span></div>
+      <div class="question" id="question">Loading...</div>
+      <div class="choices" id="choices"></div>
+      <div class="explanation" id="explanation" style="display:none"></div>
+
+      <div class="controls">
+        <div class="left">
+          <button id="prev" class="secondary">◀ Previous</button>
+          <button id="next" class="secondary">Next ▶</button>
+          <div style="width:10px"></div>
+          <div class="progress" aria-hidden="true"><div class="bar" id="bar"></div></div>
+        </div>
+        <div>
+          <span class="score">Score: <span id="score">0</span> / <span id="answered">0</span></span>
+          <button id="restart" class="secondary" style="margin-left:10px">Restart</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>Built for study — covers controls, cryptography, change management, zero trust, physical security, deception tech and more.</footer>
+  </div>
+
+  <script>
+    const QUESTIONS = [
+      {q:"Which control category focuses on policies, procedures, and governance?",options:["Technical","Managerial","Operational","Physical"],answer:"B",explanation:"Managerial controls are policies, procedures, and governance."},
+      {q:"Which control uses hardware or software to enforce security?",options:["Managerial","Operational","Technical","Physical"],answer:"C",explanation:"Technical controls use systems and software to enforce security."},
+      {q:"Employee security training is primarily which category of control?",options:["Operational","Physical","Technical","Managerial"],answer:"A",explanation:"Operational controls include training and procedures."},
+      {q:"Locks, bollards, and fences are examples of which control category?",options:["Technical","Operational","Managerial","Physical"],answer:"D",explanation:"These are physical controls protecting people and property."},
+      {q:"A firewall that blocks malicious traffic is which control type?",options:["Detective","Preventive","Corrective","Deterrent"],answer:"B",explanation:"Firewalls are preventive controls that block unwanted traffic."},
+      {q:"CCTV systems that log activity are primarily which control type?",options:["Preventive","Detective","Corrective","Compensating"],answer:"B",explanation:"Cameras detect and record events (detective)."},
+      {q:"Visible security guards are primarily which control type?",options:["Corrective","Deterrent","Directive","Compensating"],answer:"B",explanation:"Security guards act as deterrent controls."},
+      {q:"Restoring from backup after ransomware is which control type?",options:["Preventive","Detective","Corrective","Directive"],answer:"C",explanation:"Restoration is a corrective action."},
+      {q:"Using enhanced monitoring when MFA cannot be implemented is an example of what?",options:["Corrective","Compensating","Directive","Detective"],answer:"B",explanation:"Compensating controls provide alternatives when ideal controls aren't possible."},
+      {q:"A formal policy that tells users what to do is what type of control?",options:["Detective","Preventive","Directive","Corrective"],answer:"C",explanation:"Directive controls provide guidance through policy and standards."},
+      {q:"An intrusion prevention system (IPS) that drops malicious packets is which type?",options:["Detective","Preventive","Corrective","Compensating"],answer:"B",explanation:"IPS actively prevents attacks by blocking traffic."},
+      {q:"Audit logs used to investigate incidents are examples of which control type?",options:["Preventive","Corrective","Detective","Deterrent"],answer:"C",explanation:"Logs are detective controls used for investigation."},
+      {q:"Which CIA principle ensures only authorized users can read data?",options:["Integrity","Availability","Confidentiality","Non-repudiation"],answer:"C",explanation:"Confidentiality protects against unauthorized disclosure."},
+      {q:"Which CIA principle ensures information is unaltered and trustworthy?",options:["Confidentiality","Integrity","Availability","Authentication"],answer:"B",explanation:"Integrity ensures data hasn't been tampered with."},
+      {q:"Which CIA principle ensures systems and data are accessible when needed?",options:["Availability","Non-repudiation","Confidentiality","Authorization"],answer:"A",explanation:"Availability ensures resources are reachable when required."},
+      {q:"Non-repudiation primarily provides what?",options:["Data confidentiality","Proof of origin and integrity","Improved availability","Faster authentication"],answer:"B",explanation:"Non-repudiation prevents denial of origin for actions or messages."},
+      {q:"In AAA, what does the middle 'A' stand for (Authentication, Authorization, Accounting)?",options:["Authentication","Authorization","Accounting","Administration"],answer:"B",explanation:"The second A is Authorization — granting permissions."},
+      {q:"Which authentication factor is 'something you are'?",options:["Knowledge","Possession","Inherence","Location"],answer:"C",explanation:"Inherence factors are biometrics (fingerprint, iris)."},
+      {q:"Which method is commonly used to authenticate systems to each other?",options:["Passwords","Certificates (PKI)","PINs","Badges"],answer:"B",explanation:"Certificates authenticate systems via PKI."},
+      {q:"Role-Based Access Control (RBAC) grants permissions based on what?",options:["User roles","Time of day","IP address","Device type"],answer:"A",explanation:"RBAC assigns permissions to roles which users are members of."},
+      {q:"Attribute-Based Access Control (ABAC) makes decisions based on what?",options:["Labels only","Attributes like department and clearance","Only user roles","Only time of day"],answer:"B",explanation:"ABAC uses attributes for fine-grained decisions."},
+      {q:"Accounting in AAA primarily records what?",options:["Authentication methods","Access attempts and resource usage","Authorization policies","Encryption keys"],answer:"B",explanation:"Accounting logs access and usage for auditing and billing."},
+      {q:"Gap analysis in security is used to do what?",options:["Encrypt data","Compare current state to desired security state","Replace legacy apps","Authenticate users"],answer:"B",explanation:"Gap analysis identifies differences between current and target posture."},
+      {q:"Zero Trust principle assumes trust for which entities?",options:["Internal users only","External users only","No implicit trust for any user or device","Only managed devices"],answer:"C",explanation:"Zero Trust assumes no implicit trust, internal or external."},
+      {q:"Which Zero Trust component evaluates signals and makes policy decisions?",options:["Policy Enforcement Point","Policy Engine","Policy Administrator","Subject"],answer:"B",explanation:"Policy Engine evaluates context to decide allow/deny."},
+      {q:"Which Zero Trust component implements decisions at enforcement points?",options:["Policy Engine","Policy Administrator","Adaptive Identity","Threat Scope Reduction"],answer:"B",explanation:"Policy Administrator pushes configuration to enforcement points."},
+      {q:"Adaptive identity in Zero Trust refers to what?",options:["Static passwords","Dynamic authentication decisions based on risk","Only biometric use","Disabling MFA"],answer:"B",explanation:"Adaptive identity adjusts requirements based on context and risk."},
+      {q:"Threat scope reduction in Zero Trust aims to do what?",options:["Expand network access","Limit attack surface and lateral movement","Disable logging","Increase implicit trust zones"],answer:"B",explanation:"It limits what compromised entities can reach."},
+      {q:"Policy Enforcement Point (PEP) is responsible for what?",options:["Making policy decisions","Enforcing access decisions at resource level","Signing certificates","Storing logs"],answer:"B",explanation:"PEP enforces decisions made by the Policy Engine."},
+      {q:"Implicit trust zones in Zero Trust are typically what?",options:["Large flat networks","Minimized/microsegmented zones","DMZ only","Unmonitored segments"],answer:"B",explanation:"Zero Trust minimizes implicit trust via microsegmentation."},
+      {q:"In Zero Trust, a 'subject' refers to what?",options:["A network switch","A user or device requesting access","A certificate authority","An encryption algorithm"],answer:"B",explanation:"Subjects are users or devices requesting access."},
+      {q:"Bollards are used primarily to protect against what?",options:["Tailgating","Vehicle ramming attacks","Phishing","DDoS"],answer:"B",explanation:"Bollards block or slow vehicle-based attacks."},
+      {q:"An access control vestibule (mantrap) helps prevent which threat?",options:["Phishing","Tailgating","SQL injection","Malware"],answer:"B",explanation:"Mantraps prevent tailgating and force single-person passage."},
+      {q:"Fencing is classified under which security control type?",options:["Technical","Operational","Managerial","Physical"],answer:"D",explanation:"Fencing is a physical perimeter control."},
+      {q:"Video surveillance primarily provides which control function?",options:["Preventive","Detective","Corrective","Compensating"],answer:"B",explanation:"Cameras detect and record activity (detective)."},
+      {q:"Which sensor type detects thermal/heat signatures?",options:["Ultrasonic","Pressure","Infrared","Microwave"],answer:"C",explanation:"Infrared sensors detect heat signatures."},
+      {q:"Microwave sensors detect motion by using what?",options:["Sound waves","Electromagnetic waves","Pressure changes","Light"],answer:"B",explanation:"Microwave sensors use electromagnetic reflections to detect movement."},
+      {q:"Ultrasonic sensors detect intruders using what method?",options:["Radio waves","High-frequency sound reflections","Heat detection","Pressure"],answer:"B",explanation:"Ultrasonic sensors use sound wave reflections."},
+      {q:"Pressure sensors under a floor detect what?",options:["Light changes","Weight or force applied","Temperature change","Sound"],answer:"B",explanation:"Pressure sensors detect weight/force on a surface."},
+      {q:"Access badges used with readers are primarily which control?",options:["Detective","Preventive","Directive","Deterrent"],answer:"B",explanation:"Badges prevent unauthorized access by requiring credentials."},
+      {q:"Good lighting in a parking area mainly helps with what?",options:["Network coverage","Deterrence and surveillance visibility","Encryption strength","Access control"],answer:"B",explanation:"Lighting improves visibility and deters criminal activity."},
+      {q:"A honeypot is best described as what?",options:["A production database","A decoy system to attract attackers","An encryption key store","A firewall appliance"],answer:"B",explanation:"Honeypots are decoys to observe attackers and collect intelligence."},
+      {q:"A honeynet differs from a honeypot because it is what?",options:["A single file","A network of multiple decoys","An antivirus tool","A SIEM feature"],answer:"B",explanation:"Honeynets simulate networks of systems to engage attackers."},
+      {q:"A honeyfile is placed where to detect misuse?",options:["In a public web root","In a sensitive-looking directory","On the network perimeter","Only on backups"],answer:"B",explanation:"Honeyfiles are planted where attackers might look to trigger alerts."},
+      {q:"A honeytoken is which of the following?",options:["A fake credential or marker that alerts when used","A type of sensor","A hardware token","A CA certificate"],answer:"A",explanation:"Honeytokens are markers (e.g., fake API keys) that alert when accessed."},
+      {q:"Which part of change management identifies who must approve a change?",options:["Ownership","Approval process","Backout plan","Maintenance window"],answer:"B",explanation:"Approval process defines who can authorize changes."},
+      {q:"A backout plan in change management is used for what?",options:["Documenting stakeholders","Reverting changes if failures occur","Increasing downtime","Removing access controls"],answer:"B",explanation:"Backout plans provide steps to restore previous state if change fails."},
+      {q:"Scheduling changes during low-impact times is called what?",options:["Backout plan","Maintenance window","Change embargo","Version control"],answer:"B",explanation:"Maintenance windows are preplanned times for maintenance to limit impact."},
+      {q:"Impact analysis before a change should identify what?",options:["Only benefits","Potential effects and dependencies","Stakeholder names only","Encryption algorithms"],answer:"B",explanation:"Impact analysis evaluates downstream effects and dependencies."},
+      {q:"Updating diagrams and runbooks after changes falls under which activity?",options:["Technical implication","Version control","Documentation","Backout"],answer:"C",explanation:"Documentation must be updated to reflect changes."},
+      {q:"Allow lists and deny lists are examples of what in technical implications?",options:["Documentation","Access control mechanisms","Stakeholder management","Backout plans"],answer:"B",explanation:"Allow/deny lists control which entities can access resources."},
+      {q:"Legacy applications complicate change management because they often have what?",options:["Full modern APIs","Compatibility and dependency issues","Built-in versioning","Automatic rollback"],answer:"B",explanation:"Legacy apps may not support modern changes and have hidden dependencies."},
+      {q:"Version control in change management primarily helps with what?",options:["Obfuscation","Tracking changes and rollback","Increasing downtime","Encrypting configs"],answer:"B",explanation:"Version control allows tracking and reverting changes as needed."},
+      {q:"In PKI, the public key is typically used to do what?",options:["Encrypt data to send to the private key holder","Sign data to prove origin","Store private keys","Generate CRLs"],answer:"A",explanation:"Public key encrypts data that only the private key can decrypt."},
+      {q:"Which of these is a hardware-based key protection solution?",options:["HSM","TPM","Secure Enclave","All of the above"],answer:"D",explanation:"HSMs, TPMs, and secure enclaves provide hardware-backed key protection."},
+      {q:"Full-disk encryption protects data at which level?",options:["File","Partition/Drive","Database","Record"],answer:"B",explanation:"Full-disk encryption encrypts the entire drive or partition."},
+      {q:"Tokenization primarily does what?",options:["Replaces sensitive data with non-sensitive equivalents","Encrypts whole disks","Hashes passwords","Creates backups"],answer:"A",explanation:"Tokenization replaces sensitive info with tokens."},
+      {q:"Data masking is primarily used to do what?",options:["Encrypt production databases","Hide sensitive data in non-production environments","Sign certificates","Monitor networks"],answer:"B",explanation:"Data masking hides sensitive data while keeping it usable for testing."},
+      {q:"Salting passwords helps prevent what type of attack?",options:["Brute-force","Precomputed hash/rainbow table","MITM","SQL injection"],answer:"B",explanation:"Salts add randomness to prevent precomputed hash attacks."},
+      {q:"Key stretching is used to protect against what?",options:["Rainbow table attacks","Phishing","DDoS","SQL injection"],answer:"A",explanation:"Key stretching increases computational effort to slow attacks."},
+      {q:"Which encryption is symmetric?",options:["RSA","AES","ECC","DSA"],answer:"B",explanation:"AES uses the same key for encryption and decryption (symmetric)."},
+      {q:"Which encryption is asymmetric?",options:["AES","RSA","Blowfish","DES"],answer:"B",explanation:"RSA uses public/private key pairs (asymmetric)."},
+      {q:"A wildcard certificate secures what?",options:["Single subdomain","Multiple subdomains under one domain","IP address only","Email only"],answer:"B",explanation:"Wildcard certificates secure all subdomains of a domain."},
+      {q:"Self-signed certificates are signed by whom?",options:["A trusted CA","The entity itself","Root CA","Intermediate CA"],answer:"B",explanation:"Self-signed certificates are signed by the entity itself."},
+      {q:"CRLs are used for what in PKI?",options:["Issuing certificates","Listing revoked certificates","Encrypting traffic","Signing messages"],answer:"B",explanation:"Certificate Revocation Lists show revoked certificates."},
+      {q:"OCSP provides what functionality?",options:["Issuing new certs","Checking revocation status in real-time","Encrypting email","Backing up keys"],answer:"B",explanation:"OCSP checks certificate revocation status in near real-time."},
+      {q:"Steganography is what?",options:["Encrypting data","Hiding data inside images or audio","Hashing passwords","Tokenization"],answer:"B",explanation:"Steganography hides messages inside other files."},
+      {q:"Digital signatures provide what assurances?",options:["Confidentiality and availability","Integrity and non-repudiation","Performance and access","Encryption and decryption"],answer:"B",explanation:"Digital signatures verify integrity and provide non-repudiation."},
+      {q:"Which type of malware disguises itself as legitimate software?", options:["Trojan","Worm","Virus","Ransomware"], answer:"A", explanation:"Trojans appear as legitimate programs to trick users into running them."},
+      {q:"A worm primarily spreads by what mechanism?", options:["User action","Network propagation","Email phishing","Physical media"], answer:"B", explanation:"Worms self-propagate through networks without user intervention."},
+      {q:"Ransomware typically does what?", options:["Encrypts files and demands payment","Steals credentials","Monitors keystrokes","Deletes backups"], answer:"A", explanation:"Ransomware encrypts files and demands ransom to restore access."},
+      {q:"Which attack involves intercepting communication between two parties?", options:["Phishing","MITM (Man-in-the-Middle)","Brute-force","DDoS"], answer:"B", explanation:"MITM attacks intercept and sometimes alter communications between parties."},
+      {q:"Phishing attacks primarily attempt to do what?", options:["Steal sensitive information","Overload network resources","Encrypt user files","Modify system logs"], answer:"A", explanation:"Phishing uses deceptive messages to steal credentials or information."},
+      {q:"Spear phishing differs from phishing in that it is?", options:["Automated","Targeted at specific individuals","Delivered via USB","Always contains ransomware"], answer:"B", explanation:"Spear phishing targets specific individuals with customized messages."},
+      {q:"Which social engineering attack pretends to be IT support?", options:["Whaling","Vishing","Tailgating","Baiting"], answer:"B", explanation:"Vishing uses phone calls pretending to be tech support to trick victims."},
+      {q:"A security assessment that simulates a real-world attack is called?", options:["Vulnerability scan","Penetration test","Audit","Change management review"], answer:"B", explanation:"Penetration testing simulates attacks to identify vulnerabilities."},
+      {q:"Which security control can help mitigate insider threats?", options:["Mandatory vacations","Firewall rules","Digital certificates","Public key encryption"], answer:"A", explanation:"Mandatory vacations help detect fraudulent activities by insiders."},
+      {q:"Which backup strategy only copies changed data since the last full backup?", options:["Full backup","Incremental backup","Differential backup","Snapshot"], answer:"B", explanation:"Incremental backups copy only data changed since the last backup."},
+      {q:"Differential backups copy data since which point?", options:["Last incremental backup","Last differential backup","Last full backup","Last snapshot"], answer:"C", explanation:"Differential backups copy all changes since the last full backup."},
+      {q:"Which type of fire suppression system uses gas instead of water?", options:["Sprinkler system","CO2 or FM-200 system","Halon system","Dry chemical system"], answer:"B", explanation:"Gas-based fire suppression protects sensitive equipment without water damage."},
+      {q:"Which disaster recovery strategy involves a fully redundant site ready to take over immediately?", options:["Hot site","Warm site","Cold site","Backup site"], answer:"A", explanation:"A hot site is fully operational and can take over immediately."},
+      {q:"Which disaster recovery site is minimally equipped and requires setup?", options:["Hot site","Warm site","Cold site","Failover site"], answer:"C", explanation:"A cold site requires setup and configuration before it can be used."},
+      {q:"Which protocol is used to securely transfer files over SSH?", options:["FTP","SFTP","HTTP","SMTP"], answer:"B", explanation:"SFTP uses SSH for secure file transfer."},
+      {q:"TLS primarily provides what?", options:["Encryption, integrity, authentication","Virus scanning","Key stretching","Backup"], answer:"A", explanation:"TLS ensures encryption, integrity, and authentication for network communications."},
+      {q:"DNSSEC helps prevent what type of attack?", options:["Phishing","DNS spoofing","Ransomware","Social engineering"], answer:"B", explanation:"DNSSEC protects against DNS spoofing by validating DNS responses."},
+      {q:"Which type of attack floods a network with traffic to cause outage?", options:["Phishing","DDoS","MITM","SQL Injection"], answer:"B", explanation:"DDoS attacks overwhelm network resources to cause downtime."},
+      {q:"Input validation primarily helps prevent which type of attacks?", options:["SQL injection","DDoS","Phishing","Tailgating"], answer:"A", explanation:"Input validation prevents attackers from injecting malicious commands."},
+      {q:"Which practice reduces risks of storing passwords in plain text?", options:["Salting and hashing","TLS encryption","VPN tunneling","Tokenization"], answer:"A", explanation:"Salting and hashing protect stored passwords against compromise."},
+      {q:"Which security principle limits access to only what is necessary?", options:["Least Privilege","Zero Trust","CIA","Separation of duties"], answer:"A", explanation:"Least privilege ensures users only have the access needed for their role."},
+      {q:"Separation of duties is primarily intended to prevent what?", options:["Confidentiality breaches","Fraud and errors","Denial of service","Phishing"], answer:"B", explanation:"Separation of duties prevents a single individual from having excessive control."},
+      {q:"Which cryptographic technique ensures data integrity?", options:["Hashing","Encryption","Tokenization","VPN"], answer:"A", explanation:"Hashing produces a fixed output that can verify data integrity."},
+      {q:"Which encryption algorithm is considered asymmetric?", options:["AES","RSA","Blowfish","Twofish"], answer:"B", explanation:"RSA uses public/private keys, making it asymmetric encryption."},
+      {q:"A digital certificate is issued by which entity?", options:["Certificate Authority","Public Key","HSM","Firewall"], answer:"A", explanation:"Certificate Authorities issue and sign digital certificates."},
+      {q:"Which tool monitors and collects security events in real time?", options:["SIEM","VPN","Firewall","Proxy"], answer:"A", explanation:"SIEM collects logs and alerts for security monitoring."},
+      {q:"Which of these is a physical security control?", options:["Biometric scanner","Encryption","Firewall","VPN"], answer:"A", explanation:"Biometric scanners control physical access to secure areas."},
+      {q:"Which authentication factor is considered something you have?", options:["Password","Smart card","Fingerprint","Location"], answer:"B", explanation:"Smart cards are possession-based authentication factors."},
+      {q:"Which malware type attempts to remain undetected by antivirus software?", options:["Rootkit","Trojan","Worm","Spyware"], answer:"A", explanation:"Rootkits hide themselves to avoid detection."},
+      {q:"Patch management primarily addresses what risk?", options:["Vulnerabilities","Phishing","Physical breaches","DDoS"], answer:"A", explanation:"Applying patches fixes software vulnerabilities."},
+      {q:"Which type of malware encrypts files and demands payment for decryption?", options:["Ransomware","Spyware","Adware","Rootkit"], answer:"A", explanation:"Ransomware encrypts files and demands a ransom to restore access."},
+      {q:"Which type of social engineering attack uses email to trick users?", options:["Vishing","Phishing","Whaling","Tailgating"], answer:"B", explanation:"Phishing uses deceptive emails to steal credentials or sensitive data."},
+      {q:"Whaling attacks specifically target whom?", options:["High-level executives","Regular employees","IT staff","Vendors"], answer:"A", explanation:"Whaling targets executives or high-profile individuals for high-value information."},
+      {q:"Baiting attacks often use what to lure victims?", options:["Malware-laden physical media","Fake emails","Unauthorized access","Firewall rules"], answer:"A", explanation:"Baiting uses physical items, like infected USB drives, to trick users."},
+      {q:"Tailgating as a physical security attack involves what?", options:["Following someone into a secured area","Hacking network devices","Sending phishing emails","Injecting SQL commands"], answer:"A", explanation:"Tailgating is following authorized personnel into restricted areas."},
+      {q:"Which method ensures continuous monitoring of a system for anomalies?", options:["SIEM","VPN","Antivirus","Firewall"], answer:"A", explanation:"SIEM aggregates and analyzes logs for security monitoring."},
+      {q:"Which principle ensures no single person has excessive access?", options:["Separation of duties","Least privilege","Zero Trust","Non-repudiation"], answer:"A", explanation:"Separation of duties prevents fraud and errors by dividing responsibilities."},
+      {q:"Which type of backup captures only changes since the last backup?", options:["Incremental","Differential","Full","Snapshot"], answer:"A", explanation:"Incremental backups save only the data that has changed since the previous backup."},
+      {q:"Differential backups differ from incremental in that they?", options:["Copy changes since last full backup","Copy all files every time","Copy changes since last differential","Are stored offsite"], answer:"A", explanation:"Differential backups copy all changes since the last full backup."},
+      {q:"Which disaster recovery site is fully operational and can immediately replace production?", options:["Hot site","Warm site","Cold site","Failover site"], answer:"A", explanation:"A hot site is fully ready for immediate use during a disaster."},
+      {q:"Which disaster recovery site requires setup before it can be used?", options:["Hot site","Warm site","Cold site","Production site"], answer:"C", explanation:"A cold site is a barebones facility that must be configured before use."},
+      {q:"Which protocol secures web traffic?", options:["HTTP","HTTPS","FTP","SMTP"], answer:"B", explanation:"HTTPS uses TLS/SSL to secure web traffic."},
+      {q:"Which security principle denies implicit trust for all users/devices?", options:["Zero Trust","Least Privilege","CIA","AAA"], answer:"A", explanation:"Zero Trust assumes no implicit trust and verifies every request."},
+      {q:"Multi-factor authentication (MFA) typically combines what?", options:["Two passwords","Password + another factor","Two biometric scans","VPN + password"], answer:"B", explanation:"MFA combines something you know with something you have or are."},
+      {q:"Which protocol is used to securely transfer files over SSH?", options:["FTP","SFTP","HTTP","SMTP"], answer:"B", explanation:"SFTP uses SSH for secure file transfer."},
+      {q:"DNSSEC helps prevent which type of attack?", options:["DNS spoofing","Phishing","SQL Injection","DDoS"], answer:"A", explanation:"DNSSEC protects against DNS spoofing by validating DNS records."},
+      {q:"Which type of attack floods a network to cause unavailability?", options:["DDoS","MITM","Phishing","SQL Injection"], answer:"A", explanation:"DDoS attacks overwhelm network resources to disrupt service."},
+      {q:"Input validation prevents which attacks?", options:["SQL injection","DDoS","Phishing","Man-in-the-middle"], answer:"A", explanation:"Validating input protects against malicious code injection."},
+      {q:"Which authentication factor is 'something you know'?", options:["Password","Smart card","Biometric","Token"], answer:"A", explanation:"Passwords or PINs are knowledge-based authentication factors."},
+      {q:"Which authentication factor is 'something you have'?", options:["Password","Smart card","Fingerprint","Location"], answer:"B", explanation:"A smart card or hardware token is possession-based authentication."},
+      {q:"Which authentication factor is 'something you are'?", options:["Password","Smart card","Biometric","Token"], answer:"C", explanation:"Biometrics, such as fingerprints, are inherence factors."},
+      {q:"Patch management primarily addresses what?", options:["Software vulnerabilities","Phishing attacks","Physical security","DDoS"], answer:"A", explanation:"Patching fixes known vulnerabilities to prevent exploitation."},
+      {q:"Rootkits are designed to do what?", options:["Hide malicious activity","Encrypt files","Steal credentials","Flood the network"], answer:"A", explanation:"Rootkits hide their presence and activity from detection systems."},
+      {q:"Tokenization in security is best described as?", options:["Replacing sensitive data with non-sensitive placeholders","Encrypting entire disks","Hashing passwords","Obfuscating logs"], answer:"A", explanation:"Tokenization replaces sensitive data with tokens to reduce exposure."},
+      {q:"Steganography hides data where?", options:["Inside other files such as images or audio","Encrypted in a database","On a USB drive","In system logs"], answer:"A", explanation:"Steganography conceals data within other files to hide its existence."},
+      {q:"Blockchain ensures which property for transactions?", options:["Tamper-evident ledger","Faster encryption","Centralized control","Password hashing"], answer:"A", explanation:"Blockchain provides immutable, tamper-evident records."},
+      {q:"Wildcard certificates secure what?", options:["Multiple subdomains under one domain","Only the root domain","Single IP address","Email servers only"], answer:"A", explanation:"Wildcard certificates secure all subdomains like *.example.com."},
+      {q:"Self-signed certificates are characterized by what?", options:["Signed by the entity itself, not a CA","Always validated by OCSP","Signed by trusted CA","Automatically revoked"], answer:"A", explanation:"Self-signed certificates are issued by the owner and not trusted by default."},
+      {q:"Key stretching increases security by doing what?", options:["Making brute-force attacks more computationally expensive","Shortening keys","Removing salts","Encrypting backups"], answer:"A", explanation:"Key stretching increases the work required for each guess in a brute-force attack."},
+      {q:"Digital signatures provide what?", options:["Non-repudiation and integrity","Encryption","Physical security","DDoS protection"], answer:"A", explanation:"Digital signatures confirm message origin and integrity."},
+      {q:"Which is an example of a hardware-based key protection solution?", options:["TPM","HSM","Secure Enclave","All of the above"], answer:"D", explanation:"TPM, HSM, and secure enclaves all provide hardware-backed key protection."},
+      {q:"Which type of encryption uses the same key for encryption and decryption?", options:["Asymmetric","Symmetric","PKI","Hashing"], answer:"B", explanation:"Symmetric encryption uses a single shared key for both encrypting and decrypting data."},
+      {q:"Which type of encryption uses a public/private key pair?", options:["Symmetric","Asymmetric","Tokenization","Steganography"], answer:"B", explanation:"Asymmetric encryption uses public/private key pairs for secure communication."},
+      {q:"A VPN primarily provides what security feature?", options:["Confidentiality and integrity of communications","Physical security","Non-repudiation","Tokenization"], answer:"A", explanation:"VPNs encrypt traffic to ensure confidentiality and integrity."},
+      {q:"Which hashing algorithm is considered strong and widely used?", options:["MD5","SHA-256","DES","ROT13"], answer:"B", explanation:"SHA-256 is a widely accepted cryptographic hash function providing strong security."},
+      {q:"Salting passwords protects primarily against what?", options:["Rainbow table attacks","Phishing","DDoS","SQL Injection"], answer:"A", explanation:"Salts add randomness to passwords to prevent precomputed hash attacks."},
+      {q:"Which control ensures only authorized users can access sensitive areas?", options:["Technical control","Physical control","Managerial control","Compensating control"], answer:"B", explanation:"Physical access controls, like badges and locks, restrict entry to authorized personnel."},
+      {q:"Which Zero Trust principle minimizes trust across the network?", options:["Implicit trust zones","Policy Engine","AAA","Least Privilege"], answer:"A", explanation:"Zero Trust minimizes implicit trust by segmenting networks and validating every request."},
+      {q:"Honeypots are used primarily to?", options:["Attract attackers to observe behavior","Encrypt sensitive data","Backup critical systems","Authenticate users"], answer:"A", explanation:"Honeypots are decoy systems that lure attackers to gather intelligence."},
+      {q:"Honeynets differ from honeypots in that they?", options:["Simulate a full network of decoys","Are only files","Store private keys","Encrypt communications"], answer:"A", explanation:"Honeynets simulate multiple interconnected decoy systems for attacker analysis."},
+      {q:"Honeytokens are primarily what?", options:["Fake credentials or markers to detect misuse","Malware","Physical sensors","Encryption keys"], answer:"A", explanation:"Honeytokens trigger alerts when attackers access them."},
+      {q:"Version control in change management ensures what?", options:["Tracking changes and rollback","Encrypting data","Monitoring malware","Implementing MFA"], answer:"A", explanation:"Version control tracks configuration changes and allows rollback if needed."},
+      {q:"Backout plans are essential for what reason?", options:["Reverting changes if they fail","Monitoring logs","Encrypting backups","Segregating duties"], answer:"A", explanation:"Backout plans ensure systems can return to a known good state if a change causes problems."},
+      {q:"Impact analysis in change management identifies?", options:["Potential risks and dependencies","Encryption algorithms","Firewall rules","User credentials"], answer:"A", explanation:"Impact analysis evaluates effects and dependencies before implementing changes."},
+      {q:"Maintenance windows are used for what?", options:["Scheduling changes during low-impact times","Encrypting all data","User authentication","Revoking certificates"], answer:"A", explanation:"Maintenance windows minimize operational disruption when performing system updates."},
+      {q:"Which PKI component issues and signs certificates?", options:["Certificate Authority (CA)","Root of trust","TPM","HSM"], answer:"A", explanation:"CAs issue, sign, and manage digital certificates in PKI."},
+      {q:"OCSP is used for what purpose?", options:["Checking certificate revocation status in real-time","Issuing certificates","Encrypting files","Signing CSRs"], answer:"A", explanation:"OCSP provides near real-time status on certificate validity."},
+      {q:"Which type of encryption secures entire drives or partitions?", options:["Full-disk encryption","File-level encryption","Tokenization","Steganography"], answer:"A", explanation:"Full-disk encryption encrypts the entire storage medium to protect data."},
+      {q:"Key escrow refers to?", options:["Storing private keys with a trusted third party for recovery","Encrypting disks","Revoking certificates","Digital signing"], answer:"A", explanation:"Key escrow allows recovery of encrypted data by a trusted third party if necessary."},
+      {q:"Digital signatures provide assurance of?", options:["Non-repudiation and integrity","Availability","Physical security","DDoS protection"], answer:"A", explanation:"Digital signatures verify message origin and ensure integrity."},
+      {q:"HSMs are used for?", options:["Secure hardware key management","Encrypting emails only","Physical access control","User authentication"], answer:"A", explanation:"HSMs provide a secure, tamper-resistant environment for key storage and cryptographic operations."},
+      {q:"Which type of control uses cameras or motion sensors to detect intrusions?", options:["Preventive","Detective","Corrective","Compensating"], answer:"B", explanation:"Detective controls identify and log events as they occur."},
+      {q:"Which cryptographic algorithm is asymmetric?", options:["AES","RSA","SHA-256","3DES"], answer:"B", explanation:"RSA is an asymmetric algorithm using public/private keys."},
+      {q:"What is the primary goal of key stretching?", options:["Increase password security by making brute-force attacks harder","Shorten key lengths","Encrypt full disks","Generate certificates"], answer:"A", explanation:"Key stretching makes brute-force attacks computationally expensive."},
+      {q:"Tokenization is primarily used to?", options:["Replace sensitive data with non-sensitive tokens","Encrypt data","Sign digital messages","Authenticate users"], answer:"A", explanation:"Tokenization substitutes sensitive information with meaningless tokens."},
+      {q:"Which Zero Trust concept enforces least privilege on access requests?", options:["Policy Enforcement Point","Adaptive Identity","Threat Scope Reduction","Policy Engine"], answer:"D", explanation:"Policy Engine makes context-aware decisions enforcing least privilege."},
+      {q:"A honeypot that simulates a database is an example of?", options:["Physical security","Deception technology","Encryption","Zero Trust"], answer:"B", explanation:"Deception tech like honeypots simulate resources to detect attackers."},
+      {q:"Which sensor would detect someone walking across a floor?", options:["Pressure sensor","Infrared sensor","Ultrasonic sensor","Microwave sensor"], answer:"A", explanation:"Pressure sensors detect force or weight on surfaces."},
+      {q:"Which PKI element acts as a trust anchor for certificates?", options:["Root CA","HSM","OCSP","CSR"], answer:"A", explanation:"The Root CA is the top-level certificate authority trusted implicitly."},
+      {q:"Which is an example of a compensating control?", options:["Using a backup MFA method when primary is unavailable","Firewalls","Security guards","Encryption"], answer:"A", explanation:"Compensating controls provide alternative protections when the primary cannot be applied."},
+      {q:"Which principle ensures data cannot be altered without detection?", options:["Availability","Integrity","Confidentiality","Non-repudiation"], answer:"B", explanation:"Integrity ensures data is accurate and unaltered."},
+      {q:"Which Zero Trust component stores the policies?", options:["Policy Engine","Policy Administrator","Policy Enforcement Point","Subject"], answer:"B", explanation:"Policy Administrator stores and pushes policies to enforcement points."},
+      {q:"Which type of encryption is fastest for large data?", options:["Asymmetric","Symmetric","Hashing","Tokenization"], answer:"B", explanation:"Symmetric encryption is computationally efficient for bulk data."},
+      {q:"Which security concept prevents denial of origin for digital messages?", options:["Non-repudiation","Availability","Integrity","Authorization"], answer:"A", explanation:"Non-repudiation ensures the sender cannot deny sending a message."},
+      {q:"Which type of change control evaluates downstream impacts before implementation?", options:["Impact analysis","Backout plan","Maintenance window","Version control"], answer:"A", explanation:"Impact analysis identifies risks and dependencies."},
+      {q:"A security guard checking badges exemplifies which type of control?", options:["Deterrent","Preventive","Directive","Corrective"], answer:"A", explanation:"Deterrent controls reduce likelihood of malicious activity by visible presence."},
+      {q:"Which type of certificate is trusted by browsers without a CA signature?", options:["Self-signed","Wildcard","Third-party","Root CA"], answer:"D", explanation:"Root CAs are trusted anchors; self-signed certificates are not trusted by default."},
+      {q:"What is the primary purpose of a CSR?", options:["Request a certificate from a CA","Store private keys","Encrypt traffic","Revoke a certificate"], answer:"A", explanation:"A Certificate Signing Request is submitted to a CA for signing."},
+      {q:"Which tool is a secure, tamper-resistant storage for keys?", options:["TPM","Firewall","SIEM","Antivirus"], answer:"A", explanation:"TPMs securely store cryptographic keys in hardware."},
+      {q:"Which is a directive control?", options:["Acceptable Use Policy","Firewall","CCTV","Security guard"], answer:"A", explanation:"Directive controls instruct users on required behavior."},
+      {q:"Which encryption method protects individual files?", options:["Full-disk encryption","File-level encryption","Partition encryption","Database encryption"], answer:"B", explanation:"File-level encryption secures individual files rather than entire drives."},
+      {q:"Which control type involves analyzing system logs to identify anomalies?", options:["Preventive","Detective","Directive","Compensating"], answer:"B", explanation:"Detective controls monitor and alert on unusual activity."},
+      {q:"Which encryption ensures data is unreadable during transmission?", options:["Symmetric","Transport encryption","Hashing","Tokenization"], answer:"B", explanation:"Transport encryption protects data in transit."},
+      {q:"What is the purpose of key escrow in PKI?", options:["Allow recovery of encrypted data","Encrypt all backups","Sign certificates","Validate OCSP responses"], answer:"A", explanation:"Key escrow stores keys securely for recovery if needed."},
+      {q:"Which hashing technique adds randomness to passwords before hashing?", options:["Key stretching","Salting","Tokenization","Steganography"], answer:"B", explanation:"Salting adds unique random data to passwords to prevent precomputed hash attacks."},
+      {q:"Which type of cryptography uses a shared secret key?", options:["Asymmetric","Symmetric","PKI","Blockchain"], answer:"B", explanation:"Symmetric cryptography uses the same key for encryption and decryption."},
+      {q:"A honeytoken in a database is designed to do what?", options:["Authenticate users","Alert when accessed","Encrypt sensitive data","Log traffic"], answer:"B", explanation:"Honeytokens trigger alerts if attackers access them."},
+      {q:"Which Zero Trust principle limits lateral movement of attackers?", options:["Policy Enforcement","Threat Scope Reduction","Adaptive Identity","Policy Engine"], answer:"B", explanation:"Threat scope reduction confines attackers to minimal access."},
+      {q:"Which type of sensor is best for detecting vibrations or footsteps?", options:["Microwave","Pressure","Infrared","Ultrasonic"], answer:"B", explanation:"Pressure sensors detect force or vibrations on surfaces."},
+      {q:"Which cryptographic tool provides tamper-resistant storage on devices?", options:["TPM","HSM","Secure Enclave","All of the above"], answer:"D", explanation:"All three provide hardware-backed key protection."},
+      {q:"Which type of certificate is used for multiple subdomains?", options:["Root CA","Self-signed","Wildcard","OCSP"], answer:"C", explanation:"Wildcard certificates cover all subdomains of a domain."},
+      {q:"Which change management element ensures activities occur in a controlled, predictable manner?", options:["SOP","Impact analysis","Version control","Backout plan"], answer:"A", explanation:"Standard Operating Procedures (SOPs) provide structured guidance."},
+      {q:"Which encryption is typically used for databases?", options:["Full-disk","Volume","Database-level","File-level"], answer:"C", explanation:"Database-level encryption protects data at rest within databases."},
+      {q:"What is the primary purpose of a mantrap?", options:["Prevent tailgating","Monitor traffic","Encrypt files","Authenticate users"], answer:"A", explanation:"Mantraps prevent unauthorized entry by allowing only one person at a time."},
+      {q:"Which control type includes antivirus and endpoint protection?", options:["Technical","Operational","Managerial","Physical"], answer:"A", explanation:"Technical controls involve hardware/software protections."},
+      {q:"Which type of control involves written policies for employee behavior?", options:["Directive","Preventive","Detective","Compensating"], answer:"A", explanation:"Directive controls guide actions via policies or procedures."},
+      {q:"Which cryptography method verifies message origin and integrity?", options:["Hashing","Digital signatures","Symmetric encryption","Tokenization"], answer:"B", explanation:"Digital signatures authenticate origin and ensure integrity."},
+      {q:"Which blockchain property makes it useful for security?", options:["Centralized management","Immutable ledger","Fast encryption","Certificate revocation"], answer:"B", explanation:"Blockchain creates tamper-evident, immutable records."},
+      {q:"What is the primary use of OCSP?", options:["Issue certificates","Check revocation status in real time","Encrypt data","Generate CSRs"], answer:"B", explanation:"OCSP checks if a certificate has been revoked in near real-time."},
+      {q:"Which type of control deters unauthorized access by visibility alone?", options:["Detective","Deterrent","Preventive","Corrective"], answer:"B", explanation:"Deterrent controls discourage attacks via presence or signage."},
+      {q:"Which Zero Trust element dynamically adjusts authentication requirements based on risk?", options:["Policy Enforcement Point","Policy Engine","Adaptive Identity","Threat Scope Reduction"], answer:"C", explanation:"Adaptive Identity adjusts authentication based on risk context."},
+      {q:"Which type of control reduces the likelihood of a successful attack by restricting user actions?", options:["Preventive","Detective","Corrective","Directive"], answer:"A", explanation:"Preventive controls aim to stop security incidents before they occur."},
+      {q:"Which cryptographic approach allows secure key exchange over an insecure channel?", options:["Symmetric","Asymmetric","Hashing","Tokenization"], answer:"B", explanation:"Asymmetric encryption allows secure key exchange without sharing private keys."},
+      {q:"Which form of authentication uses a code generated on a hardware device or app?", options:["Password","Token-based","Biometric","Certificate"], answer:"B", explanation:"Token-based authentication uses one-time codes for verification."},
+      {q:"Which Zero Trust component enforces policies at network or application boundaries?", options:["Policy Engine","Policy Enforcement Point","Adaptive Identity","Threat Scope Reduction"], answer:"B", explanation:"The Policy Enforcement Point applies access decisions at the resource level."},
+      {q:"Which change management activity identifies potential downstream effects before implementation?", options:["Impact Analysis","Backout Plan","SOP Update","Version Control"], answer:"A", explanation:"Impact analysis evaluates consequences of a change on systems and processes."},
+      {q:"Which type of encryption secures a single file?", options:["Full-disk","Partition","File-level","Database-level"], answer:"C", explanation:"File-level encryption targets individual files rather than entire drives or volumes."},
+      {q:"Which physical security control is used to prevent unauthorized vehicle access?", options:["Bollards","Access badge","CCTV","Lighting"], answer:"A", explanation:"Bollards are barriers designed to stop or slow vehicles."},
+      {q:"Which type of cryptographic hash is commonly used for verifying file integrity?", options:["SHA-1","RSA","AES","PKI"], answer:"A", explanation:"SHA algorithms generate hashes to verify data integrity."},
+      {q:"Which change management element specifies how to revert a failed change?", options:["Backout Plan","Impact Analysis","Maintenance Window","SOP"], answer:"A", explanation:"Backout plans provide steps to undo changes if issues arise."},
+      {q:"Which control type involves monitoring systems for suspicious activity?", options:["Preventive","Detective","Directive","Compensating"], answer:"B", explanation:"Detective controls observe and alert on anomalies."},
+      {q:"Which cryptographic method replaces sensitive data with non-sensitive placeholders?", options:["Tokenization","Hashing","Symmetric encryption","Digital signatures"], answer:"A", explanation:"Tokenization substitutes real data with tokens to reduce exposure."},
+      {q:"Which PKI element ensures trust by being inherently trusted in certificate chains?", options:["Root of Trust","HSM","OCSP","CSR"], answer:"A", explanation:"Root CAs act as trust anchors for certificate validation."},
+      {q:"Which security principle assumes all devices and users are untrusted by default?", options:["Least Privilege","Defense in Depth","Zero Trust","AAA"], answer:"C", explanation:"Zero Trust assumes no implicit trust internally or externally."},
+      {q:"Which sensor type detects motion using high-frequency sound waves?", options:["Ultrasonic","Infrared","Microwave","Pressure"], answer:"A", explanation:"Ultrasonic sensors detect intrusions via reflected sound waves."},
+      {q:"Which type of certificate is generated by a CA to validate ownership of a public key?", options:["CSR","Wildcard","Self-signed","Root CA"], answer:"C", explanation:"Self-signed certificates are created by the entity itself without CA validation."},
+      {q:"Which type of control provides guidance to employees on expected behavior?", options:["Directive","Preventive","Detective","Corrective"], answer:"A", explanation:"Directive controls define policy and procedure guidance."},
+      {q:"Which cryptographic technique hides data inside another file or image?", options:["Steganography","Tokenization","Digital Signature","Encryption"], answer:"A", explanation:"Steganography conceals the existence of data."},
+      {q:"Which physical security element deters crime by providing visibility and illumination?", options:["Lighting","Bollards","Fencing","Sensors"], answer:"A", explanation:"Proper lighting deters criminal activity and increases visibility."},
+      {q:"Which control type restores systems or data to normal after a security incident?", options:["Corrective","Detective","Preventive","Directive"], answer:"A", explanation:"Corrective controls remediate issues caused by incidents."},
+      {q:"Which cryptographic tool securely stores keys on a hardware device?", options:["HSM","TPM","Secure Enclave","All of the above"], answer:"D", explanation:"HSMs, TPMs, and secure enclaves provide hardware-based key protection."},
+      {q:"A company is implementing Zero Trust and wants to dynamically adjust user access based on real-time behavioral analytics. Which component is responsible for this?", options:["Policy Enforcement Point","Adaptive Identity","Policy Administrator","Implicit Trust Zone"], answer:"B", explanation:"Adaptive identity adjusts permissions based on continuous context and behavior monitoring."},
+      {q:"Which certificate validation method provides real-time certificate status without requiring full CRL downloads?", options:["OCSP","CSR","Root CA","Key Escrow"], answer:"A", explanation:"OCSP provides live validation of certificate revocation."},
+      {q:"An attacker modifies a file but keeps the size the same, hoping detection tools won't identify the change. Which security principle is violated?", options:["Confidentiality","Integrity","Non-repudiation","Availability"], answer:"B", explanation:"File modification without authorization violates integrity."},
+      {q:"Which encryption method is LEAST suitable for encrypting large amounts of data due to performance cost?", options:["AES","RSA","ChaCha20","3DES"], answer:"B", explanation:"RSA is slow and intended for small amounts of data like key exchange."},
+      {q:"A forensic analyst discovers a honeyfile was accessed on a production server. What does this most likely indicate?", options:["A backup failed","Malicious activity or unauthorized user","The file was misconfigured","Normal system indexing"], answer:"B", explanation:"Honeyfiles are decoys; any access is suspicious and usually indicates compromise."},
+      {q:"Which control type is implemented when a company requires two administrators to approve a system change?", options:["Directive","Compensating","Managerial","Deterrent"], answer:"C", explanation:"Managerial controls include oversight processes like dual approval."},
+      {q:"A Zero Trust Policy Engine denies access because the detected user behavior statistically differs from the user's baseline pattern. Which Zero Trust principle does this represent?", options:["Threat scope reduction","Adaptive identity","Implicit trust zone","Policy-driven access control"], answer:"D", explanation:"Policy-driven access control makes decisions using behavioral and context data."},
+      {q:"A security administrator wants to ensure older certificates cannot be used after renewal. Which PKI mechanism enforces this?", options:["CRL","HSM","Wildcard certificate","Root of Trust"], answer:"A", explanation:"CRLs list certificates that are expired or revoked."},
+      {q:"A system update caused multiple dependent services to fail. Which change management failure occurred?", options:["Backout plan failure","Insufficient dependency analysis","Incorrect SOP update","Missing approval"], answer:"B", explanation:"Dependencies should be analyzed to avoid cascading service failures."},
+      {q:"Which cryptographic process expands weak passwords to increase hash computation time?", options:["Salting","Key stretching","Tokenization","Data masking"], answer:"B", explanation:"Key stretching makes passwords harder to brute-force."},
+      {q:"A threat actor attempts to bypass bollards by accessing a pedestrian gate. Which principle was violated?", options:["Zero Trust","Defense in Depth","Least Privilege","Non-repudiation"], answer:"B", explanation:"Defense in Depth requires multiple layers; the pedestrian gate lacked reinforcement."},
+      {q:"Which Zero Trust plane is responsible for performing the access enforcement decision at the workload?", options:["Control Plane","Data Plane","Policy Administrator","Adaptive Identity"], answer:"B", explanation:"The Data Plane includes the Policy Enforcement Point."},
+      {q:"Which control would MOST effectively detect unauthorized lateral movement in a network?", options:["Host-based IDS","Honeytoken","Full-disk encryption","Least privilege policy"], answer:"A", explanation:"Host-based IDS monitors local activity and detects suspicious movements."},
+      {q:"A system uses a single key for encryption and a different key for message integrity verification. What type of cryptographic design is this?", options:["Asymmetric","Hybrid symmetric","Hash-based integrity","Transport encryption"], answer:"C", explanation:"Hashes or HMACs provide integrity separate from encryption."},
+      {q:"A company uses blockchain for audit logs. What security benefit does this provide?", options:["Lower computation cost","Mutability","Cryptographically verifiable integrity","Simplified certificate issuance"], answer:"C", explanation:"Blockchain provides immutable audit logging with integrity verification."},
+      {q:"A security guard uses a biometric terminal requiring facial recognition and a badge swipe. This is an example of:", options:["Single-factor authentication","Multi-factor authentication","Implicit trust","Token-based access"], answer:"B", explanation:"Two different authentication categories = MFA."},
+      {q:"A company's PKI environment stores private keys in tamper-resistant hardware. Which tool is being used?", options:["TPM","HSM","CSR","OCSP"], answer:"B", explanation:"HSMs protect private keys with strong hardware isolation."},
+      {q:"Which sensor would MOST likely detect someone applying pressure to a window frame?", options:["Ultrasonic","Infrared","Microwave","Pressure sensor"], answer:"D", explanation:"Pressure sensors trigger when an object applies force to the surface."},
+      {q:"A company must comply with requirements that legacy applications cannot be modified. Which change management approach is MOST appropriate?", options:["Denial of change request","Compensating controls","Hybrid deployment","Full migration"], answer:"B", explanation:"Compensating controls allow compliance even when system modification is impossible."},
+      {q:"An email signed with a private key ensures which principle?", options:["Confidentiality","Integrity and non-repudiation","Availability","Data masking"], answer:"B", explanation:"Digital signatures verify integrity and prove origin."},
+      {q:"A company's Zero Trust architecture requires continuous verification of device posture before granting resource access. Which component performs this?", options:["Policy Engine","Policy Enforcement Point","Adaptive Identity","Threat Scope Reduction"], answer:"C", explanation:"Adaptive Identity continuously validates user and device posture before granting access."},
+      {q:"Which PKI component is responsible for digitally signing issued certificates?", options:["Root CA","OCSP Responder","CRL Server","Key Escrow"], answer:"A", explanation:"Root CAs sign certificates and form the trust foundation of PKI."},
+      {q:"Which encryption implementation is MOST appropriate for a database storing millions of customer records?", options:["File-level encryption","Record-level encryption","Full-disk encryption","Transport encryption"], answer:"B", explanation:"Record-level encryption protects individual entries without encrypting entire structures."},
+      {q:"A security engineer configures alerts for patterns that represent known attack signatures. What control type is this?", options:["Deterrent","Preventive","Detective","Compensating"], answer:"C", explanation:"Detective controls identify malicious activity after or during its occurrence."},
+      {q:"Which Zero Trust concept ensures no part of the network is inherently trusted?", options:["Implicit trust zones","Least privilege","Network segmentation","Adaptive identity"], answer:"A", explanation:"Zero Trust eliminates implicit trust, even inside internal networks."},
+      {q:"A private key is lost but the corresponding certificate is still active. What should be done FIRST?", options:["Regenerate the certificate","Revoke the certificate","Submit a CSR","Check OCSP"], answer:"B", explanation:"A lost private key must result in immediate certificate revocation."},
+      {q:"A maintenance window has closed, but a system update is only 50% complete. What should the administrator do?", options:["Complete the update anyway","Initiate the backout plan","Extend the window without approval","Restart the service"], answer:"B", explanation:"Change management requires reverting the change if the window expires."},
+      {q:"Which type of sensor uses radio waves to detect movement?", options:["Pressure","Infrared","Microwave","Ultrasonic"], answer:"C", explanation:"Microwave sensors detect changes in reflected microwaves caused by motion."},
+      {q:"A honeytoken is triggered when an attacker attempts to use a false set of credentials. Which capability does this provide?", options:["Prevention","Disruption","Detection and attribution","Encryption"], answer:"C", explanation:"Honeytokens detect unauthorized access attempts by identifying malicious activity."},
+      {q:"A device uses a secure enclave during cryptographic operations. What is the primary benefit?", options:["Faster hashing","Physical tamper resistance","Isolation of sensitive operations","Simplified key exchange"], answer:"C", explanation:"Secure enclaves isolate cryptographic processes to protect sensitive operations."},
+      {q:"During gap analysis, a security analyst identifies that encryption is only applied at the application layer, but not the database layer. This represents:", options:["A missing control","A compensating control","An excessive permission","A legacy dependency"], answer:"A", explanation:"Gap analysis identifies missing or partially implemented controls."},
+      {q:"Which certificate type can secure multiple subdomains under a single domain?", options:["Wildcard","Self-signed","Root CA","EV certificate"], answer:"A", explanation:"*.domain.com is used to secure multiple subdomains with a wildcard certificate."},
+      {q:"A malicious insider deletes production logs to conceal their activity. Which principle is compromised?", options:["Confidentiality","Integrity","Non-repudiation","Availability"], answer:"C", explanation:"Log tampering removes the ability to prove an action occurred."},
+      {q:"A Zero Trust architecture requires all access decisions to be evaluated against organizational policies before execution. Which component handles this?", options:["Policy Engine","Policy Enforcement Point","Adaptive Identity","Secure Enclave"], answer:"A", explanation:"The Policy Engine decides whether access is granted or denied."},
+      {q:"A system uses PBKDF2 to secure user passwords. Which security property does this strengthen?", options:["Confidentiality","Integrity","Resistance to brute force","Non-repudiation"], answer:"C", explanation:"PBKDF2 stretches keys to require more computational effort to guess them."},
+      {q:"A company deploys bollards that automatically retract for authorized vehicles. This is an example of:", options:["Compensating control","Preventive and physical control","Managerial control","Technical control"], answer:"B", explanation:"Bollards prevent unauthorized vehicle access and are a physical preventive control."},
+      {q:"Which process ensures security diagrams remain accurate after major configuration changes?", options:["Change approval","Updating documentation","Version control","Impact analysis"], answer:"B", explanation:"Documentation updates reflect new system architecture after changes."},
+      {q:"Which cryptographic concept ensures ciphertext cannot be meaningfully analyzed even if large amounts are collected?", options:["Key escrow","Confusion and diffusion","Key exchange","Tokenization"], answer:"B", explanation:"Confusion and diffusion make patterns in ciphertext unpredictable."},
+      {q:"An organization uses two separate CAs to prevent a single point of failure. This design improves:", options:["Availability","Confidentiality","Hash integrity","Key length"], answer:"A", explanation:"Multiple CAs increase certificate service redundancy and availability."},
+      {q:"Which PKI element allows an entity to request a certificate from a CA?", options:["CSR","OCSP","CRL","Token"], answer:"A", explanation:"A CSR is needed to generate and sign a certificate."},
+      {q:"A financial auditor discovers that several users in the accounting department have more privileges than required for their daily tasks. Which security principle has been violated?", options:["Least Privilege","Availability","Fail-Open","Order of Volatility"], answer:"A", explanation:"Least privilege ensures users only have access needed for their job functions."},
+      {q:"A security analyst notices an outbound connection from a server to an IP address in a foreign country using an uncommon port. The server begins exfiltrating data slowly throughout the night. What attack is occurring?", options:["Data Exfiltration via Command and Control","Man-in-the-Middle Attack","DNS Poisoning","ARP Spoofing"], answer:"A", explanation:"Slow data exfiltration to a foreign IP suggests a C2 channel for data theft."},
+      {q:"A developer pushes new application code directly into production without approval or testing. Which process was bypassed?", options:["Change Management","Penetration Testing","Risk Avoidance","Version Control"], answer:"A", explanation:"Change management requires proper approval and testing before deployment."},
+      {q:"An employee reports that their computer randomly restarts and now displays unauthorized software running in the background. Task Manager shows a suspicious signed process. What type of malware is MOST likely installed?", options:["Rootkit","Trojan","Worm","Keylogger"], answer:"A", explanation:"Rootkits hide malicious processes and can cause system instability."},
+      {q:"A penetration test reveals that the company web server is vulnerable to an attack that forces users to execute unwanted commands through an authenticated session. What is the vulnerability?", options:["CSRF","SQL Injection","LDAP Injection","XSS"], answer:"A", explanation:"CSRF exploits authenticated sessions to perform unauthorized actions."},
+      {q:"A company notices unauthorized access to a server originating from the CEO's device, even though the CEO is out of the country. MFA logs show 'push fatigue' attacks. What should the security team implement?", options:["Number-matching MFA","Single-factor authentication","Disable MFA","Use static PINs"], answer:"A", explanation:"Number-matching MFA prevents push fatigue attacks by requiring user input."},
+      {q:"A security analyst identifies that an attacker modified DNS records to redirect users to a malicious website. What attack took place?", options:["DNS Hijacking","Session Hijacking","MAC Flooding","Port Forwarding"], answer:"A", explanation:"DNS hijacking redirects users by modifying DNS records."},
+      {q:"During an investigation, logs show that an insider has encrypted several shared folders and demanded ransom. What type of threat actor is this?", options:["Malicious Insider","Script Kiddie","State-Sponsored Agent","Hacktivist"], answer:"A", explanation:"An insider performing ransomware attacks is a malicious insider threat."},
+      {q:"A company wants to prevent attackers from capturing passwords by analyzing network traffic. Which protocol should be implemented?", options:["TLS","Telnet","FTP","SNMPv1"], answer:"A", explanation:"TLS encrypts network traffic to protect credentials."},
+      {q:"A security team notices multiple failed login attempts across several servers using different usernames and IP addresses. What type of attack is occurring?", options:["Password Spraying","Brute Force Attack","Dictionary Attack","Rainbow Table Attack"], answer:"A", explanation:"Password spraying uses common passwords across many accounts to avoid detection."},
+      {q:"A threat actor compromises a cloud VM and uses it to attack other systems within the same company's cloud environment. What cloud vulnerability was exploited?", options:["Misconfigured IAM roles","Excessive logging","Overprovisioned storage","Weak MFA policies"], answer:"A", explanation:"Misconfigured IAM roles allow lateral movement in cloud environments."},
+      {q:"A SOC analyst sees evidence of credential harvesting using a fake Office 365 login page sent via email. What attack technique is this?", options:["Spear Phishing","Smishing","Whaling","Vishing"], answer:"A", explanation:"Fake login pages sent via email are characteristic of spear phishing."},
+      {q:"A cybersecurity team identifies a vulnerability requiring immediate action. It has a CVSS score of 9.8. What type of vulnerability is this?", options:["Critical","High","Medium","Low"], answer:"A", explanation:"CVSS scores of 9.0-10.0 are considered critical vulnerabilities."},
+      {q:"A user reports that files on their PC have been encrypted and now have a '.lock' extension with instructions demanding cryptocurrency. What type of malware is this?", options:["Ransomware","Spyware","Adware","Rootkit"], answer:"A", explanation:"File encryption with ransom demands is characteristic of ransomware."},
+      {q:"A new contractor is granted temporary access to internal systems but that access is automatically removed once the contract ends. What security principle does this support?", options:["Time-based Access Control","Implicit Deny","Least Functionality","Fail-Safe"], answer:"A", explanation:"Time-based access control automatically revokes access after a set period."},
+      {q:"An attacker bypasses authentication by injecting extra data into a login SQL query. What attack was used?", options:["SQL Injection","Cross-Site Scripting","Buffer Overflow","DNS Poisoning"], answer:"A", explanation:"SQL injection manipulates database queries to bypass authentication."},
+      {q:"During a forensics investigation, the security team needs to collect data from RAM before shutting down the system. What principle must they follow?", options:["Order of Volatility","Chain of Custody","Least Privilege","Separation of Duties"], answer:"A", explanation:"Order of volatility prioritizes collecting the most temporary data first."},
+      {q:"A company wants to ensure data remains private even if intercepted during transmission. What concept ensures this?", options:["Encryption","Hashing","Tokenization","Obfuscation"], answer:"A", explanation:"Encryption protects data confidentiality during transmission."},
+      {q:"A user reports that their system is running slowly, and Task Manager shows large amounts of CPU usage by a process named 'mine.exe'. What type of attack is this?", options:["Cryptojacking","Ransomware","Botnet Infection","Phishing"], answer:"A", explanation:"Cryptojacking malware uses system resources to mine cryptocurrency."},
+      {q:"A vulnerability scan reveals that several servers are missing critical patches. What type of vulnerability is this?", options:["Improper Patch Management","Misconfigured Firewall","Default Credentials","Privilege Escalation"], answer:"A", explanation:"Missing patches indicate improper patch management practices."},
+      {q:"A security analyst discovers that a privileged user has been accessing confidential financial reports outside of business hours from an unusual IP range. Logs confirm authentication was successful using MFA. What is the MOST likely explanation?", options:["Insider threat","Credential stuffing","Privilege escalation","Session hijacking"], answer:"A", explanation:"Privileged access from unusual locations suggests an insider threat."},
+      {q:"A Zero Trust deployment is failing because devices inside the network are bypassing policy checks when communicating with legacy servers. Which component is NOT enforcing rules correctly?", options:["Policy Enforcement Point","Policy Engine","Policy Administrator","Adaptive Identity System"], answer:"A", explanation:"The PEP is responsible for enforcing access policies."},
+      {q:"A company detects that attackers are repeatedly probing a legacy ERP system. Instead of patching immediately, the team deploys a fake duplicate system with altered data to analyze attacker behavior. Which technique is used?", options:["Honeynet","Honeyfile","Honeytoken","Honeypot"], answer:"D", explanation:"A honeypot is a decoy system used to study attacker behavior."},
+      {q:"An application requires rapid recovery from corruption and must ensure that no unauthorized changes to logs occur. Which TWO concepts must be prioritized?", options:["Confidentiality & Integrity","Integrity & Availability","Non-repudiation & Integrity","Availability & Confidentiality"], answer:"B", explanation:"Rapid recovery relates to availability, and preventing unauthorized changes relates to integrity."},
+      {q:"A newly hired contractor requests elevated access for troubleshooting but cannot explain why the access is needed. According to change management, what should occur FIRST?", options:["Impact analysis","Approval process","Ownership verification","Backout plan creation"], answer:"B", explanation:"Access requests should follow the approval process before being granted."},
+      {q:"A system storing encrypted PII becomes compromised, but the attacker only obtained ciphertext. The security team confirms that the encryption key was stored inside a TPM. What BEST describes why the attacker gained nothing?", options:["Key escrow invalidated the ciphertext","The TPM prevented key extraction","The encryption algorithm was symmetric","The disk used full-disk encryption"], answer:"B", explanation:"TPM protects encryption keys from extraction, making ciphertext useless."},
+      {q:"During an audit, it is found that multiple servers rely on outdated TLS certificates that auto-renew from an untrusted internal CA. What is the MOST critical failure?", options:["Weak hashing algorithm","Failure of root of trust","Expired CRLs","Incorrect wildcard usage"], answer:"B", explanation:"An untrusted CA breaks the root of trust for all certificates."},
+      {q:"An attacker sends employees a fake login portal that captures credentials but does NOT immediately use them. Instead, the attacker waits weeks before attempting login. Which security control would detect the delay?", options:["Deterrent control","Corrective control","Detective control","Directive control"], answer:"C", explanation:"Detective controls identify suspicious activity over time."},
+      {q:"A cloud workload must encrypt data in transit and authenticate devices before allowing API access. Which TWO cryptographic components are required?", options:["Public key certificates","Key escrow","Blockchain ledger","Hashing with salt"], answer:"A", explanation:"Certificates provide both encryption and authentication capabilities."},
+      {q:"A company needs to identify unknown malicious lateral movement. They deploy decoy credentials inside memory, causing attackers to reveal themselves by attempting to use them. What technology is this?", options:["Honeynet","Honeytoken","Honeyfile","Deception browser"], answer:"B", explanation:"Honeytokens are fake credentials that alert when accessed."},
+      {q:"During an investigation, a SOC analyst notices that an attacker logged in using a valid admin account, but the login originated from a device that had no prior authentication history. The attacker then moved laterally but avoided systems monitored by the SIEM. Which Zero Trust principle would have MOST prevented the attacker's movement?", options:["Implicit trust zones","Policy-driven access control","Adaptive identity","Policy Enforcement Point segmentation"], answer:"D", explanation:"PEP segmentation would have restricted lateral movement."},
+      {q:"A ransomware variant encrypts only active project files while leaving the OS untouched. The attacker used stolen credentials and a legitimate remote management tool to deploy the payload. What security control MOST likely failed?", options:["Authentication system strength","Authorization model implementation","Detective controls monitoring normal tool usage","Physical access restrictions"], answer:"C", explanation:"Detective controls should have identified abnormal use of legitimate tools."},
+      {q:"An internal audit reveals that a development system storing hashed passwords was breached. The attacker obtained the hashed password database and cracked several weak passwords using GPU compute power. Which improvement would MOST reduce the likelihood of this happening again?", options:["Switch from hashing to symmetric encryption","Increase password length and enable salting","Use tokenization for password storage","Implement certificate-based logins"], answer:"B", explanation:"Stronger passwords with salting make cracking more difficult."},
+      {q:"A security engineer finds that a critical legacy system cannot support modern certificates or OCSP checks. The system must still communicate securely with new applications. What is the BEST solution?", options:["Use a wildcard certificate","Deploy a compensating control using a TLS offloading proxy","Disable certificate validation on the new applications","Convert to self-signed certificates"], answer:"B", explanation:"A TLS offload proxy provides modern security for legacy systems."},
+      {q:"A company detects unusual outbound traffic from an IoT device. Forensics reveal the attacker attempted to exfiltrate data but interacted with a fake environment containing false metadata, triggering alerts. What deception technology was MOST likely used?", options:["Honeyfile","Honeypot","Honeytoken","Honeynet"], answer:"D", explanation:"A honeynet creates a fake network environment to detect attackers."},
+      {q:"A SOC analyst sees repeated failed login attempts to a sensitive HR application from an internal workstation. The attempts stop, and hours later a successful login occurs from the same workstation using a different account. Which is the MOST likely explanation?", options:["The attacker used credential stuffing","Session hijacking occurred","Lateral movement after brute-force reconnaissance","The workstation's access badge was cloned"], answer:"C", explanation:"Failed attempts followed by successful login suggests reconnaissance then lateral movement."},
+      {q:"A Zero Trust deployment shows legitimate users being denied access to a finance application. Logs show the Policy Engine allows the request, but the user is still blocked. Where is the failure occurring?", options:["Policy Administrator","Policy Enforcement Point","Adaptive identity layer","Threat scope reduction module"], answer:"B", explanation:"If the Policy Engine approves but access is denied, the PEP is failing."},
+      {q:"A security team observes that attackers gained access through a compromised contractor VPN account. The contractor used weak passwords but had MFA enabled. Logs show the attacker authenticated using a device previously unknown. What would BEST prevent this attack?", options:["Adding password rotation requirements","Implementing device-based conditional access","Increasing password complexity policy","Restricting MFA to SMS only"], answer:"B", explanation:"Device-based conditional access would have blocked unknown devices."},
+      {q:"A developer accidentally pushed database credentials into a public Git repository. Even though the keys were deleted minutes later, the database suffered unauthorized access. What control would have MOST reduced the impact?", options:["Key escrow system","Version control hooks with secret scanning","Storing credentials using symmetric encryption","Service restart policies"], answer:"B", explanation:"Secret scanning in version control prevents credential exposure."},
+      {q:"A critical system failure forces the IT team to perform an emergency patch without completing full impact analysis. After the patch, several dependent applications stop functioning because they relied on legacy protocols no longer supported. What change management element was missing?", options:["Backout plan","Stakeholder notification","Test results","Maintenance window"], answer:"C", explanation:"Testing would have identified compatibility issues with dependent systems."}
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+    let answeredCount = 0;
+
+    const qIdxEl = document.getElementById("qIdx");
+    const qTotalEl = document.getElementById("qTotal");
+    const questionEl = document.getElementById("question");
+    const choicesEl = document.getElementById("choices");
+    const explanationEl = document.getElementById("explanation");
+    const barEl = document.getElementById("bar");
+    const scoreEl = document.getElementById("score");
+    const answeredEl = document.getElementById("answered");
+
+    function renderQuestion() {
+      const q = QUESTIONS[currentIdx];
+      qIdxEl.textContent = currentIdx + 1;
+      questionEl.textContent = q.q;
+      choicesEl.innerHTML = "";
+      explanationEl.style.display = "none";
+
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement("button");
+        btn.className = "choice";
+        btn.textContent = `${String.fromCharCode(65+i)}. ${opt}`;
+        btn.addEventListener("click", () => selectAnswer(btn, String.fromCharCode(65+i)));
+        choicesEl.appendChild(btn);
+      });
+
+      updateProgress();
+    }
+
+    function selectAnswer(btn, choice) {
+      const q = QUESTIONS[currentIdx];
+      const buttons = choicesEl.querySelectorAll("button");
+      buttons.forEach(b => b.classList.add("disabled"));
+
+      if(choice === q.answer){
+        btn.classList.add("correct");
+        score++;
+      } else {
+        btn.classList.add("wrong");
+        buttons.forEach(b=>{
+          if(b.textContent.startsWith(q.answer)) b.classList.add("correct");
+        });
+      }
+
+      explanationEl.textContent = q.explanation;
+      explanationEl.style.display = "block";
+      answeredCount++;
+      updateProgress();
+    }
+
+    function updateProgress() {
+      barEl.style.width = `${((currentIdx+1)/QUESTIONS.length)*100}%`;
+      scoreEl.textContent = score;
+      answeredEl.textContent = answeredCount;
+    }
+
+    document.getElementById("next").addEventListener("click", () => {
+      if(currentIdx < QUESTIONS.length - 1) currentIdx++;
+      renderQuestion();
+    });
+
+    document.getElementById("prev").addEventListener("click", () => {
+      if(currentIdx > 0) currentIdx--;
+      renderQuestion();
+    });
+
+    document.getElementById("restart").addEventListener("click", () => {
+      currentIdx = 0; score = 0; answeredCount = 0;
+      renderQuestion();
+    });
+
+    qTotalEl.textContent = QUESTIONS.length;
+    renderQuestion();
+  </script>
+</body>
+</html>
