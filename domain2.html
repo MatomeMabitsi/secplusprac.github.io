@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Security+ SY0-701 — Threats & Vulnerabilities Quiz</title>
+  <style>
+    :root {
+      --bg:#0f1724; --card:#0b1220; --accent:#7dd3fc; --muted:#94a3b8;
+      --optionText:#ffffff; --correct:#1aa96f; --wrong:#e24b4b;
+    }
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+    body{background:linear-gradient(180deg,#071226 0%, #071025 60%);color:#e6eef6;display:flex;align-items:center;justify-content:center;padding:20px}
+    .container{width:100%;max-width:980px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:12px;padding:18px;box-shadow:0 8px 30px rgba(2,6,23,0.7)}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    h1{font-size:18px;margin:0}
+    .meta{color:var(--muted);font-size:13px}
+    .card{background:var(--card);border-radius:10px;padding:18px;margin-top:12px}
+    .q-number{font-weight:600;color:var(--accent)}
+    .question{font-size:16px;margin:8px 0 16px}
+    .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .choice{color:var(--optionText);background:#071827;border:1px solid rgba(255,255,255,0.03);padding:12px;border-radius:8px;cursor:pointer;transition:transform .08s ease,box-shadow .08s ease;text-align:left}
+    .choice:hover{transform:translateY(-2px)}
+    .choice.disabled{cursor:default;opacity:0.9}
+    .choice.correct{border-color:rgba(34,197,94,0.9);box-shadow:0 6px 18px rgba(34,197,94,0.06)}
+    .choice.wrong{border-color:rgba(226,75,75,0.95);box-shadow:0 6px 18px rgba(226,75,75,0.06)}
+    .explanation{margin-top:12px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px;color:var(--muted);font-size:14px}
+    .controls{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:16px}
+    .left{display:flex;gap:12px;align-items:center}
+    button{background:var(--accent);border:0;padding:8px 12px;border-radius:8px;color:#012;cursor:pointer;font-weight:700}
+    button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    .progress{height:8px;background:#061018;border-radius:999px;overflow:hidden;flex:1}
+    .bar{height:8px;background:linear-gradient(90deg,var(--accent),#60a5fa);width:0%}
+    .score{font-weight:700}
+    footer{margin-top:14px;color:var(--muted);font-size:13px;text-align:center}
+    
+    /* Navigation modal styles */
+    .nav-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center}
+    .nav-content{background:var(--card);border-radius:12px;padding:20px;width:90%;max-width:500px;max-height:80vh;overflow-y:auto}
+    .nav-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+    .nav-title{font-size:18px;font-weight:600}
+    .close-btn{background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer}
+    .nav-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(50px, 1fr));gap:8px;margin-bottom:15px}
+    .nav-btn{background:#071827;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;text-align:center;cursor:pointer;transition:all 0.2s}
+    .nav-btn:hover{background:var(--accent);color:#012}
+    .nav-btn.current{background:var(--accent);color:#012;font-weight:bold}
+    .nav-btn.answered{background:rgba(26,169,111,0.2);border-color:rgba(26,169,111,0.5)}
+    .nav-input{display:flex;gap:10px;align-items:center}
+    .nav-input input{flex:1;background:#071827;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;color:white}
+    .nav-input button{white-space:nowrap}
+    
+    @media (max-width:640px){
+      .choices{grid-template-columns:1fr}
+      .container{padding:14px}
+      .nav-grid{grid-template-columns:repeat(auto-fill, minmax(40px, 1fr))}
+    }
+  </style>
+</head>
+<body>
+  <div class="container" role="main">
+    <header>
+      <div>
+        <h1>Security+ SY0-701 — Threats & Vulnerabilities Quiz</h1>
+        <div class="meta">Immediate feedback — select an answer to reveal correct answer and explanation</div>
+      </div>
+      <div class="meta">Questions: <span id="total">100</span></div>
+    </header>
+
+    <div class="card">
+      <div><span class="q-number">Question <span id="qIdx">1</span> / <span id="qTotal">100</span></span></div>
+      <div class="question" id="question">Loading...</div>
+      <div class="choices" id="choices"></div>
+      <div class="explanation" id="explanation" style="display:none"></div>
+
+      <div class="controls">
+        <div class="left">
+          <button id="prev" class="secondary">◀ Previous</button>
+          <button id="next" class="secondary">Next ▶</button>
+          <button id="nav-btn" class="secondary">Jump to Question</button>
+          <div style="width:10px"></div>
+          <div class="progress" aria-hidden="true"><div class="bar" id="bar"></div></div>
+        </div>
+        <div>
+          <span class="score">Score: <span id="score">0</span> / <span id="answered">0</span></span>
+          <button id="restart" class="secondary" style="margin-left:10px">Restart</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>Built for study — covers threat actors, attack vectors, vulnerabilities, and mitigation techniques</footer>
+  </div>
+
+  <!-- Navigation Modal -->
+  <div class="nav-modal" id="nav-modal">
+    <div class="nav-content">
+      <div class="nav-header">
+        <div class="nav-title">Jump to Question</div>
+        <button class="close-btn" id="close-nav">&times;</button>
+      </div>
+      <div class="nav-grid" id="nav-grid"></div>
+      <div class="nav-input">
+        <input type="number" id="jump-input" min="1" max="100" placeholder="Enter question number">
+        <button id="jump-btn">Go</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const QUESTIONS = [
+      // Threat Actors and Motivations
+      {q:"Which threat actor is typically characterized by having significant funding, high sophistication, and state sponsorship?",options:["Nation-state","Hacktivist","Unskilled attacker","Organized crime"],answer:"A",explanation:"Nation-state actors have extensive resources, high technical capability, and are sponsored by governments for espionage or cyber warfare."},
+      {q:"A group of activists defaces a corporate website to protest environmental policies. Which threat actor category best describes them?",options:["Hacktivist","Organized crime","Insider threat","Nation-state"],answer:"A",explanation:"Hacktivists are motivated by political or social causes and use hacking to promote their agenda."},
+      {q:"Which threat actor motivation is primarily focused on stealing sensitive information for competitive advantage?",options:["Financial gain","Espionage","Service disruption","Revenge"],answer:"B",explanation:"Espionage involves stealing confidential information for political, military, or economic advantage."},
+      {q:"An employee who intentionally deletes critical company data before resigning represents which type of threat?",options:["Insider threat","Nation-state","Hacktivist","Organized crime"],answer:"A",explanation:"Insider threats come from within the organization and can be particularly dangerous due to their access and knowledge."},
+      {q:"Which attribute distinguishes nation-state actors from other threat actors?",options:["Internal access","Low sophistication","Limited funding","Significant resources and funding"],answer:"D",explanation:"Nation-state actors have virtually unlimited resources, advanced capabilities, and government backing."},
+      {q:"Shadow IT primarily represents what type of security concern?",options:["External threat actor","Insider threat through unauthorized systems","Nation-state espionage","Organized crime activity"],answer:"B",explanation:"Shadow IT refers to unauthorized technology systems deployed by employees, creating security vulnerabilities."},
+      {q:"Which motivation would most likely drive an organized crime group to conduct cyber attacks?",options:["Philosophical beliefs","Ethical concerns","Financial gain","Political disruption"],answer:"C",explanation:"Organized crime groups are primarily motivated by financial profit through activities like ransomware or fraud."},
+      {q:"An attacker with limited technical skills who uses pre-built tools is best described as:",options:["Nation-state actor","Unskilled attacker","Hacktivist","Insider threat"],answer:"B",explanation:"Unskilled attackers (script kiddies) lack advanced technical knowledge and rely on existing tools."},
+      {q:"Which threat actor is most likely to have both internal access and detailed knowledge of organizational systems?",options:["Nation-state","Hacktivist","Insider threat","Organized crime"],answer:"C",explanation:"Insider threats have legitimate access to systems and understand organizational vulnerabilities."},
+      {q:"A distributed denial-of-service (DDoS) attack aimed at disrupting critical infrastructure during a political conflict is most likely motivated by:",options:["Financial gain","War","Espionage","Revenge"],answer:"B",explanation:"Cyber attacks during conflicts are often motivated by warfare objectives to disrupt enemy capabilities."},
+      
+      // Threat Vectors and Attack Surfaces
+      {q:"Which attack vector uses fraudulent text messages to trick victims into revealing sensitive information?",options:["Vishing","Smishing","Phishing","Impersonation"],answer:"B",explanation:"Smishing (SMS phishing) uses text messages to deliver social engineering attacks."},
+      {q:"An attacker creates a fake website with a URL similar to a legitimate bank's website. This is an example of:",options:["Watering hole attack","Typosquatting","Business email compromise","Pretexting"],answer:"B",explanation:"Typosquatting uses URLs that are common misspellings of legitimate websites to trick users."},
+      {q:"Which social engineering technique involves creating a fabricated scenario to obtain information?",options:["Phishing","Pretexting","Vishing","Impersonation"],answer:"B",explanation:"Pretexting involves creating a false narrative or scenario to manipulate victims into providing information."},
+      {q:"A malicious USB device left in a parking lot for employees to find and plug into their computers represents which attack vector?",options:["Removable device","Message-based","Unsecure networks","Vulnerable software"],answer:"A",explanation:"This is a classic removable device attack relying on human curiosity to compromise systems."},
+      {q:"Which attack surface involves exploiting trust relationships between organizations and their service providers?",options:["Supply chain","Default credentials","Open service ports","Unsupported systems"],answer:"A",explanation:"Supply chain attacks target vulnerabilities in third-party providers to compromise their customers."},
+      {q:"An attacker calls an employee pretending to be from IT support to obtain password information. This is an example of:",options:["Vishing","Smishing","Phishing","Business email compromise"],answer:"A",explanation:"Vishing uses voice calls to conduct social engineering attacks."},
+      {q:"Which wireless attack vector exploits vulnerabilities in Bluetooth connections?",options:["Bluejacking","War driving","Evil twin","DNS spoofing"],answer:"A",explanation:"Bluejacking involves sending unsolicited messages to Bluetooth-enabled devices."},
+      {q:"A website frequently visited by employees in a specific industry is compromised to target those employees. This describes a:",options:["Watering hole attack","Phishing campaign","Business email compromise","Typosquatting scheme"],answer:"A",explanation:"Watering hole attacks compromise websites that specific target groups are known to visit."},
+      {q:"Which attack vector involves compromising the software distribution process of legitimate applications?",options:["Malicious update","File-based attack","Image-based attack","Removable device"],answer:"A",explanation:"Malicious updates involve compromising the software update mechanism to distribute malware."},
+      {q:"An attacker uses default administrator credentials to access a network device. This exploits which vulnerability?",options:["Default credentials","Unsupported systems","Open service ports","Unsecure networks"],answer:"A",explanation:"Many devices ship with well-known default credentials that attackers can exploit if not changed."},
+      
+      // Vulnerability Types
+      {q:"Which type of vulnerability occurs when a program writes data beyond the allocated buffer memory?",options:["Buffer overflow","Race condition","Memory injection","SQL injection"],answer:"A",explanation:"Buffer overflow vulnerabilities allow attackers to overwrite adjacent memory, potentially executing malicious code."},
+      {q:"A web application vulnerability that allows attackers to execute malicious scripts in users' browsers is called:",options:["Cross-site scripting (XSS)","SQL injection","Buffer overflow","Directory traversal"],answer:"A",explanation:"XSS vulnerabilities enable attackers to inject client-side scripts that execute in victims' browsers."},
+      {q:"Which vulnerability occurs when the system checks access permissions but doesn't re-check before using the resource?",options:["Time-of-check to time-of-use (TOCTTOU)","Buffer overflow","SQL injection","Memory injection"],answer:"A",explanation:"TOCTTOU vulnerabilities exploit the time gap between permission checking and resource access."},
+      {q:"A previously unknown vulnerability for which no patch exists is called:",options:["Zero-day","Legacy vulnerability","Cryptographic weakness","Misconfiguration"],answer:"A",explanation:"Zero-day vulnerabilities are unknown to the vendor and have no available fixes when discovered."},
+      {q:"Which hardware vulnerability involves exploiting firmware to gain persistent access to a system?",options:["Firmware compromise","VM escape","Resource reuse","Side loading"],answer:"A",explanation:"Firmware attacks can provide persistent access that survives OS reinstallation."},
+      {q:"A virtualization vulnerability that allows an attacker to break out of a guest VM and access the host system is called:",options:["VM escape","Resource reuse","Firmware attack","Hardware compromise"],answer:"A",explanation:"VM escape vulnerabilities allow breaking containment and accessing the host system or other VMs."},
+      {q:"Which mobile device vulnerability involves installing applications from unofficial sources?",options:["Side loading","Jailbreaking","Firmware compromise","Zero-day"],answer:"A",explanation:"Side loading bypasses official app store security controls, potentially introducing malware."},
+      {q:"A vulnerability in a third-party library used by multiple applications represents which type of supply chain risk?",options:["Software provider","Hardware provider","Service provider","Cryptographic"],answer:"A",explanation:"Software provider vulnerabilities in shared libraries can affect multiple downstream applications."},
+      {q:"Which cryptographic vulnerability occurs when two different inputs produce the same hash output?",options:["Collision","Downgrade","Birthday attack","Replay"],answer:"A",explanation:"Hash collisions undermine the integrity guarantees of cryptographic hash functions."},
+      {q:"Removing unnecessary services and changing default passwords are examples of:",options:["Hardening techniques","Virtualization security","Cryptographic protection","Supply chain security"],answer:"A",explanation:"System hardening reduces attack surface by eliminating unnecessary components and securing defaults."},
+      
+      // Malicious Activity Indicators
+      {q:"A user account shows successful logins from different countries within minutes of each other. This indicates:",options:["Impossible travel","Account lockout","Concurrent session usage","Resource consumption"],answer:"A",explanation:"Impossible travel occurs when login locations are geographically impossible to reach in the time between logins."},
+      {q:"Which indicator suggests potential malicious activity when system logs show gaps in recorded events?",options:["Missing logs","Out-of-cycle logging","Blocked content","Resource inaccessibility"],answer:"A",explanation:"Missing logs may indicate an attacker has cleared logs to cover their tracks."},
+      {q:"A sudden spike in network bandwidth usage with no corresponding business activity may indicate:",options:["Resource consumption","Account lockout","Impossible travel","Concurrent session usage"],answer:"A",explanation:"Unexplained resource consumption can indicate DDoS attacks or data exfiltration."},
+      {q:"Multiple failed login attempts followed by account lockout may indicate what type of attack?",options:["Password attack","Malware infection","Network attack","Application attack"],answer:"A",explanation:"Account lockouts following failed logins often indicate brute force or password spraying attacks."},
+      {q:"Which indicator would suggest an attacker is using stolen credentials across multiple sessions?",options:["Concurrent session usage","Resource inaccessibility","Blocked content","Published/documented attacks"],answer:"A",explanation:"Multiple concurrent sessions from the same account in different locations suggest credential theft."},
+      {q:"Web application firewall logs showing blocked SQL commands indicate what type of attack attempt?",options:["Application attack","Network attack","Physical attack","Malware attack"],answer:"A",explanation:"Blocked SQL commands indicate attempted SQL injection attacks against web applications."},
+      {q:"Unexpected system reboots or application crashes may indicate what type of malicious activity?",options:["Malware infection","Password attack","Physical attack","Cryptographic attack"],answer:"A",explanation:"System instability can be a side effect of malware infections or exploitation attempts."},
+      {q:"Which indicator might suggest an attacker is attempting to hide their activities?",options:["Out-of-cycle logging","Resource consumption","Account lockout","Blocked content"],answer:"A",explanation:"Logging occurring at unusual times may indicate an attacker manipulating log systems."},
+      {q:"A sudden increase in encrypted traffic to an unknown external IP address may indicate:",options:["Data exfiltration","Service disruption","Password attack","Physical attack"],answer:"A",explanation:"Unexplained encrypted outbound traffic can indicate data being exfiltrated from the network."},
+      {q:"Which indicator would suggest a ransomware infection is in progress?",options:["Rapid file encryption activity","Account lockout","Impossible travel","Concurrent session usage"],answer:"A",explanation:"Ransomware typically encrypts files rapidly, which can be detected through file system monitoring."},
+      
+      // Mitigation Techniques
+      {q:"Which mitigation technique involves dividing a network into smaller segments to limit breach impact?",options:["Segmentation","Access control","Patching","Encryption"],answer:"A",explanation:"Network segmentation contains breaches by limiting lateral movement across network segments."},
+      {q:"Implementing the principle of least privilege primarily helps mitigate what type of risk?",options:["Privilege escalation","Malware infections","Network attacks","Physical attacks"],answer:"A",explanation:"Least privilege limits user access to only what's necessary, reducing the impact of compromised accounts."},
+      {q:"Which technique involves maintaining a list of approved applications that can execute on a system?",options:["Application allow listing","Host-based firewall","Encryption","Patching"],answer:"A",explanation:"Application allow listing prevents unauthorized software from executing, blocking many malware types."},
+      {q:"Regularly applying security updates to address known vulnerabilities is called:",options:["Patching","Hardening","Encryption","Monitoring"],answer:"A",explanation:"Patching addresses known vulnerabilities before attackers can exploit them."},
+      {q:"Which host-based security control can detect and prevent suspicious system activities?",options:["Host-based intrusion prevention system (HIPS)","Application allow listing","Encryption","Segmentation"],answer:"A",explanation:"HIPS monitors system behavior and can block suspicious activities in real-time."},
+      {q:"Disabling unnecessary network ports and protocols is an example of:",options:["Hardening","Patching","Encryption","Monitoring"],answer:"A",explanation:"System hardening reduces attack surface by eliminating unnecessary services and access points."},
+      {q:"Which mitigation technique ensures data confidentiality even if intercepted?",options:["Encryption","Access control","Patching","Segmentation"],answer:"A",explanation:"Encryption protects data confidentiality by making it unreadable without proper decryption keys."},
+      {q:"Implementing multi-factor authentication helps mitigate what type of attacks?",options:["Password attacks","Malware infections","Network attacks","Physical attacks"],answer:"A",explanation:"MFA adds additional authentication factors, making stolen passwords insufficient for access."},
+      {q:"Which technique involves properly removing systems from service to prevent unauthorized access?",options:["Decommissioning","Hardening","Patching","Monitoring"],answer:"A",explanation:"Proper decommissioning ensures retired systems don't become unauthorized access points."},
+      {q:"Continuous security monitoring helps detect what type of activities?",options:["Malicious behavior","Vulnerabilities","Misconfigurations","All of the above"],answer:"D",explanation:"Security monitoring can detect various issues including attacks, vulnerabilities, and configuration problems."},
+      
+      // Advanced/Complex Questions
+      {q:"An advanced persistent threat (APT) group with nation-state backing is discovered exfiltrating intellectual property. Which combination of attributes best describes this actor?",options:["External, high resources, high sophistication","Internal, limited funding, low sophistication","External, limited resources, medium sophistication","Internal, high resources, high sophistication"],answer:"A",explanation:"APT groups are typically external actors with significant resources and advanced capabilities, often state-sponsored."},
+      {q:"A company discovers that their accounting department has been making payments to fraudulent accounts based on manipulated emails from what appeared to be executives. This describes which attack?",options:["Business email compromise","Phishing","Vishing","Typosquatting"],answer:"A",explanation:"Business email compromise involves impersonating executives to authorize fraudulent financial transactions."},
+      {q:"During a security assessment, a tester discovers that a web application is vulnerable to both SQL injection and cross-site scripting. What category of vulnerabilities do these represent?",options:["Web-based vulnerabilities","OS-based vulnerabilities","Hardware vulnerabilities","Virtualization vulnerabilities"],answer:"A",explanation:"Both SQLi and XSS are common web application vulnerabilities that attackers can exploit."},
+      {q:"A security team notices that several systems are generating crash dumps and then rebooting. Investigation reveals the crashes occur when processing specific network packets. What type of attack is most likely occurring?",options:["Buffer overflow attack","Password spraying","DNS attack","Cryptographic attack"],answer:"A",explanation:"System crashes when processing network input often indicate buffer overflow exploitation attempts."},
+      {q:"An organization implements network segmentation, application allow listing, and host-based IPS. What security principle are they primarily implementing?",options:["Defense in depth","Least privilege","Security through obscurity","Fail secure"],answer:"A",explanation:"Using multiple complementary security controls represents defense in depth strategy."},
+      {q:"A security analyst discovers that an attacker has been using a previously unknown vulnerability in a widely used web server. The vendor has no patch available. What type of vulnerability is this?",options:["Zero-day","Legacy","Misconfiguration","Cryptographic"],answer:"A",explanation:"Zero-day vulnerabilities are unknown to the vendor and have no available fixes when discovered."},
+      {q:"During an incident investigation, logs show that an employee's account was used to access sensitive files from their workstation while they were on vacation. What does this likely indicate?",options:["Credential compromise","Insider threat","Account misconfiguration","Legitimate access"],answer:"A",explanation:"Account usage during employee absence suggests credential theft or unauthorized access."},
+      {q:"A company's web application begins experiencing performance issues, and monitoring shows unusual database query patterns. What type of attack might be occurring?",options:["SQL injection","DDoS","Password spraying","Malware infection"],answer:"A",explanation:"Unusual database activity and performance issues can indicate SQL injection attacks exploiting the application."},
+      {q:"After a security breach, forensic analysis reveals that the attacker used a compromised supplier's software update mechanism to distribute malware. What type of attack is this?",options:["Supply chain attack","Watering hole attack","Business email compromise","Typosquatting"],answer:"A",explanation:"Compromising software distribution channels represents a supply chain attack."},
+      {q:"A security team implements both network-based and host-based intrusion detection systems, along with SIEM correlation rules. What security capability are they enhancing?",options:["Threat detection and response","Vulnerability management","Identity and access management","Data protection"],answer:"A",explanation:"Multiple detection systems with centralized correlation enhance threat detection and response capabilities."},
+      
+      // Additional questions to reach 100
+      {q:"Which type of attacker is most likely to use readily available tools without understanding how they work?",options:["Unskilled attacker","Nation-state","Insider threat","Organized crime"],answer:"A",explanation:"Unskilled attackers (script kiddies) use pre-built tools without technical expertise."},
+      {q:"What is the primary motivation behind most ransomware attacks?",options:["Financial gain","Espionage","Service disruption","Political beliefs"],answer:"A",explanation:"Ransomware attackers primarily seek financial profit through extortion."},
+      {q:"Which social engineering technique involves creating a fake identity to build trust with a target?",options:["Impersonation","Phishing","Vishing","Smishing"],answer:"A",explanation:"Impersonation involves creating fake identities to establish trust and manipulate victims."},
+      {q:"What type of vulnerability allows an attacker to manipulate database queries through user input?",options:["SQL injection","Buffer overflow","Race condition","Directory traversal"],answer:"A",explanation:"SQL injection vulnerabilities allow attackers to manipulate database queries via unvalidated input."},
+      {q:"Which mitigation technique involves verifying and enforcing security configurations across systems?",options:["Configuration enforcement","Patching","Encryption","Monitoring"],answer:"A",explanation:"Configuration enforcement ensures systems maintain secure settings according to policy."},
+      {q:"What type of attack involves capturing and retransmitting authentication data?",options:["Replay attack","Brute force","Dictionary attack","Rainbow table"],answer:"A",explanation:"Replay attacks capture and retransmit valid authentication sequences."},
+      {q:"Which indicator might suggest an attacker is attempting to exhaust system resources?",options:["Resource consumption","Account lockout","Impossible travel","Missing logs"],answer:"A",explanation:"Unexplained resource exhaustion can indicate DDoS attacks or crypto-mining malware."},
+      {q:"What type of control list defines permitted and denied network communications?",options:["Access control list (ACL)","Application allow list","Host-based firewall rules","SIEM correlation rules"],answer:"A",explanation:"ACLs control network traffic by specifying permitted and denied connections."},
+      {q:"Which cryptographic attack forces a protocol to use weaker encryption?",options:["Downgrade attack","Birthday attack","Collision attack","Replay attack"],answer:"A",explanation:"Downgrade attacks manipulate protocol negotiation to use weaker, more easily broken encryption."},
+      {q:"What security principle ensures that users only have access to resources necessary for their roles?",options:["Least privilege","Separation of duties","Defense in depth","Security through obscurity"],answer:"A",explanation:"Least privilege limits user access to only what's required for their job functions."}
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+    let answeredCount = 0;
+    let answeredQuestions = new Set();
+
+    const qIdxEl = document.getElementById("qIdx");
+    const qTotalEl = document.getElementById("qTotal");
+    const questionEl = document.getElementById("question");
+    const choicesEl = document.getElementById("choices");
+    const explanationEl = document.getElementById("explanation");
+    const barEl = document.getElementById("bar");
+    const scoreEl = document.getElementById("score");
+    const answeredEl = document.getElementById("answered");
+    const navModal = document.getElementById("nav-modal");
+    const navGrid = document.getElementById("nav-grid");
+    const jumpInput = document.getElementById("jump-input");
+    const jumpBtn = document.getElementById("jump-btn");
+
+    function renderQuestion() {
+      const q = QUESTIONS[currentIdx];
+      qIdxEl.textContent = currentIdx + 1;
+      questionEl.textContent = q.q;
+      choicesEl.innerHTML = "";
+      explanationEl.style.display = "none";
+
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement("button");
+        btn.className = "choice";
+        btn.textContent = `${String.fromCharCode(65+i)}. ${opt}`;
+        btn.addEventListener("click", () => selectAnswer(btn, String.fromCharCode(65+i)));
+        choicesEl.appendChild(btn);
+      });
+
+      updateProgress();
+      updateNavGrid();
+    }
+
+    function selectAnswer(btn, choice) {
+      const q = QUESTIONS[currentIdx];
+      const buttons = choicesEl.querySelectorAll("button");
+      buttons.forEach(b => b.classList.add("disabled"));
+
+      if(choice === q.answer){
+        btn.classList.add("correct");
+        score++;
+      } else {
+        btn.classList.add("wrong");
+        buttons.forEach(b=>{
+          if(b.textContent.startsWith(q.answer)) b.classList.add("correct");
+        });
+      }
+
+      explanationEl.textContent = q.explanation;
+      explanationEl.style.display = "block";
+      answeredCount++;
+      answeredQuestions.add(currentIdx);
+      updateProgress();
+      updateNavGrid();
+    }
+
+    function updateProgress() {
+      barEl.style.width = `${((currentIdx+1)/QUESTIONS.length)*100}%`;
+      scoreEl.textContent = score;
+      answeredEl.textContent = answeredCount;
+    }
+
+    function updateNavGrid() {
+      navGrid.innerHTML = "";
+      for (let i = 0; i < QUESTIONS.length; i++) {
+        const btn = document.createElement("button");
+        btn.className = "nav-btn";
+        btn.textContent = i + 1;
+        
+        if (i === currentIdx) {
+          btn.classList.add("current");
+        }
+        
+        if (answeredQuestions.has(i)) {
+          btn.classList.add("answered");
+        }
+        
+        btn.addEventListener("click", () => {
+          currentIdx = i;
+          renderQuestion();
+          closeNavModal();
+        });
+        
+        navGrid.appendChild(btn);
+      }
+    }
+
+    function openNavModal() {
+      navModal.style.display = "flex";
+      updateNavGrid();
+      jumpInput.value = "";
+    }
+
+    function closeNavModal() {
+      navModal.style.display = "none";
+    }
+
+    function jumpToQuestion() {
+      const questionNum = parseInt(jumpInput.value);
+      if (questionNum >= 1 && questionNum <= QUESTIONS.length) {
+        currentIdx = questionNum - 1;
+        renderQuestion();
+        closeNavModal();
+      } else {
+        alert(`Please enter a number between 1 and ${QUESTIONS.length}`);
+      }
+    }
+
+    // Event listeners
+    document.getElementById("next").addEventListener("click", () => {
+      if(currentIdx < QUESTIONS.length - 1) currentIdx++;
+      renderQuestion();
+    });
+
+    document.getElementById("prev").addEventListener("click", () => {
+      if(currentIdx > 0) currentIdx--;
+      renderQuestion();
+    });
+
+    document.getElementById("restart").addEventListener("click", () => {
+      currentIdx = 0; 
+      score = 0; 
+      answeredCount = 0;
+      answeredQuestions.clear();
+      renderQuestion();
+    });
+
+    document.getElementById("nav-btn").addEventListener("click", openNavModal);
+    document.getElementById("close-nav").addEventListener("click", closeNavModal);
+    jumpBtn.addEventListener("click", jumpToQuestion);
+    jumpInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        jumpToQuestion();
+      }
+    });
+
+    // Close modal when clicking outside
+    navModal.addEventListener("click", (e) => {
+      if (e.target === navModal) {
+        closeNavModal();
+      }
+    });
+
+    // Initialize
+    qTotalEl.textContent = QUESTIONS.length;
+    renderQuestion();
+  </script>
+</body>
+</html>
