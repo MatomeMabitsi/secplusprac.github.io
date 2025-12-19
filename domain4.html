@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Security+ SY0-701 — 100-question interactive quiz</title>
+  <style>
+    :root {
+      --bg:#0f1724; --card:#0b1220; --accent:#7dd3fc; --muted:#94a3b8;
+      --optionText:#ffffff; --correct:#1aa96f; --wrong:#e24b4b;
+    }
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+    body{background:linear-gradient(180deg,#071226 0%, #071025 60%);color:#e6eef6;display:flex;align-items:center;justify-content:center;padding:20px}
+    .container{width:100%;max-width:980px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:12px;padding:18px;box-shadow:0 8px 30px rgba(2,6,23,0.7)}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    h1{font-size:18px;margin:0}
+    .meta{color:var(--muted);font-size:13px}
+    .card{background:var(--card);border-radius:10px;padding:18px;margin-top:12px}
+    .q-number{font-weight:600;color:var(--accent)}
+    .question{font-size:16px;margin:8px 0 16px}
+    .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .choice{color:var(--optionText);background:#071827;border:1px solid rgba(255,255,255,0.03);padding:12px;border-radius:8px;cursor:pointer;transition:transform .08s ease,box-shadow .08s ease;text-align:left}
+    .choice:hover{transform:translateY(-2px)}
+    .choice.disabled{cursor:default;opacity:0.9}
+    .choice.correct{border-color:rgba(34,197,94,0.9);box-shadow:0 6px 18px rgba(34,197,94,0.06)}
+    .choice.wrong{border-color:rgba(226,75,75,0.95);box-shadow:0 6px 18px rgba(226,75,75,0.06)}
+    .explanation{margin-top:12px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px;color:var(--muted);font-size:14px}
+    .controls{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:16px}
+    .left{display:flex;gap:12px;align-items:center}
+    button{background:var(--accent);border:0;padding:8px 12px;border-radius:8px;color:#012;cursor:pointer;font-weight:700}
+    button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    .progress{height:8px;background:#061018;border-radius:999px;overflow:hidden;flex:1}
+    .bar{height:8px;background:linear-gradient(90deg,var(--accent),#60a5fa);width:0%}
+    .score{font-weight:700}
+    footer{margin-top:14px;color:var(--muted);font-size:13px;text-align:center}
+    
+    /* Navigation modal styles */
+    .nav-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center}
+    .nav-content{background:var(--card);border-radius:12px;padding:20px;width:90%;max-width:500px;max-height:80vh;overflow-y:auto}
+    .nav-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+    .nav-title{font-size:18px;font-weight:600}
+    .close-btn{background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer}
+    .nav-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(50px, 1fr));gap:8px;margin-bottom:15px}
+    .nav-btn{background:#071827;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;text-align:center;cursor:pointer;transition:all 0.2s}
+    .nav-btn:hover{background:var(--accent);color:#012}
+    .nav-btn.current{background:var(--accent);color:#012;font-weight:bold}
+    .nav-btn.answered{background:rgba(26,169,111,0.2);border-color:rgba(26,169,111,0.5)}
+    .nav-input{display:flex;gap:10px;align-items:center}
+    .nav-input input{flex:1;background:#071827;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;color:white}
+    .nav-input button{white-space:nowrap}
+    
+    @media (max-width:640px){
+      .choices{grid-template-columns:1fr}
+      .container{padding:14px}
+      .nav-grid{grid-template-columns:repeat(auto-fill, minmax(40px, 1fr))}
+    }
+  </style>
+</head>
+<body>
+  <div class="container" role="main">
+    <header>
+      <div>
+        <h1>Security+ SY0-701 — 100-question practice quiz</h1>
+        <div class="meta">Immediate feedback — select an answer to reveal correct answer and explanation</div>
+      </div>
+      <div class="meta">Questions: <span id="total">100</span></div>
+    </header>
+
+    <div class="card">
+      <div><span class="q-number">Question <span id="qIdx">1</span> / <span id="qTotal">100</span></span></div>
+      <div class="question" id="question">Loading...</div>
+      <div class="choices" id="choices"></div>
+      <div class="explanation" id="explanation" style="display:none"></div>
+
+      <div class="controls">
+        <div class="left">
+          <button id="prev" class="secondary">◀ Previous</button>
+          <button id="next" class="secondary">Next ▶</button>
+          <button id="nav-btn" class="secondary">Jump to Question</button>
+          <div style="width:10px"></div>
+          <div class="progress" aria-hidden="true"><div class="bar" id="bar"></div></div>
+        </div>
+        <div>
+          <span class="score">Score: <span id="score">0</span> / <span id="answered">0</span></span>
+          <button id="restart" class="secondary" style="margin-left:10px">Restart</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>Built for study — covers controls, cryptography, change management, zero trust, physical security, deception tech and more.</footer>
+  </div>
+
+  <!-- Navigation Modal -->
+  <div class="nav-modal" id="nav-modal">
+    <div class="nav-content">
+      <div class="nav-header">
+        <div class="nav-title">Jump to Question</div>
+        <button class="close-btn" id="close-nav">&times;</button>
+      </div>
+      <div class="nav-grid" id="nav-grid"></div>
+      <div class="nav-input">
+        <input type="number" id="jump-input" min="1" max="100" placeholder="Enter question number">
+        <button id="jump-btn">Go</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const QUESTIONS = [
+// ====== 4.1: Apply common security techniques to computing resources ======
+  {q: "What is the FIRST step in establishing a secure baseline for a new server deployment?", options: ["Apply all available patches", "Install antivirus software", "Consult industry benchmarks like CIS or DISA STIGs", "Configure firewall rules"], answer: "C", explanation: "Establishing a baseline starts with referencing industry standards and benchmarks to define what 'secure' means for that specific system type."},
+  {q: "Which of the following is a key aspect of hardening a router?", options: ["Enabling all services by default", "Changing default administrative credentials", "Using HTTP for management interfaces", "Disabling logging to improve performance"], answer: "B", explanation: "Router hardening includes changing default passwords, disabling unnecessary services, using secure protocols for management, and implementing access controls."},
+  {q: "What is the primary purpose of conducting a wireless site survey before deploying Wi-Fi?", options: ["To reduce equipment costs", "To identify optimal access point placement and minimize interference", "To test user passwords", "To configure firewall rules"], answer: "B", explanation: "Site surveys analyze radio frequency characteristics to determine the best AP placement for coverage, performance, and security while minimizing dead zones and interference."},
+  {q: "In a BYOD (Bring Your Own Device) deployment model, who typically owns the mobile device?", options: ["The corporation", "The employee", "Shared ownership between employee and corporation", "The service provider"], answer: "B", explanation: "In BYOD, employees use their personal devices for work. This creates security challenges around data separation, acceptable use, and device management."},
+  {q: "Which wireless security protocol provides forward secrecy and protects against offline dictionary attacks?", options: ["WEP", "WPA2-Personal", "WPA3", "WPA-Enterprise"], answer: "C", explanation: "WPA3 introduces Simultaneous Authentication of Equals (SAE) for personal networks, providing forward secrecy and stronger protection against offline password guessing attacks."},
+  {q: "What does MDM (Mobile Device Management) primarily enable administrators to do?", options: ["Physically repair broken devices", "Remotely configure, monitor, and enforce policies on mobile devices", "Develop mobile applications", "Track employee personal communications"], answer: "B", explanation: "MDM solutions allow centralized management of mobile devices, including enforcing security policies, deploying apps, and remotely wiping corporate data."},
+  {q: "Which technique helps prevent SQL injection attacks in web applications?", options: ["Code signing", "Input validation", "Sandboxing", "Static code analysis"], answer: "B", explanation: "Input validation checks and sanitizes user input before processing, preventing malicious SQL commands from being executed by the database."},
+  {q: "What is the security benefit of code signing for applications?", options: ["Makes code run faster", "Provides proof of origin and integrity from the developer", "Encrypts the source code", "Prevents reverse engineering"], answer: "B", explanation: "Code signing uses digital certificates to verify that code comes from a trusted publisher and hasn't been altered since signing."},
+  {q: "Which Bluetooth security concern involves unauthorized access to a device within close proximity?", options: ["Bluejacking", "Bluesnarfing", "Packet sniffing", "Wardriving"], answer: "B", explanation: "Bluesnarfing is the unauthorized access of information from a wireless device through a Bluetooth connection."},
+  {q: "What does a heat map visually represent in wireless network planning?", options: ["Temperature of network equipment", "Signal strength and coverage throughout a physical space", "Network traffic congestion", "Security vulnerability locations"], answer: "B", explanation: "Heat maps use color gradients to show wireless signal strength (RSSI) across different areas, helping optimize AP placement for coverage and performance."},
+  {q: "Which hardening technique is specifically important for IoT devices?", options: ["Disabling unnecessary services and changing default credentials", "Instaling desktop antivirus", "Implementing complex password policies", "Configuring screen savers"], answer: "A", explanation: "Many IoT devices have numerous open services and default passwords, making service reduction and credential changes critical first steps."},
+  {q: "What is the purpose of sandboxing in application security?", options: ["To make applications run faster", "To isolate untrusted code in a restricted environment", "To compress application files", "To encrypt application data"], answer: "B", explanation: "Sandboxing restricts an application's access to system resources, preventing malware from affecting the host system if the application is compromised."},
+  {q: "Which deployment model provides corporate-owned devices that employees can use for personal purposes?", options: ["BYOD", "COPE", "CYOD", "MDM"], answer: "B", explanation: "COPE (Corporate-Owned, Personally Enabled) devices are purchased and managed by the company but allow limited personal use."},
+  {q: "What does RADIUS provide in wireless security?", options: ["Encryption for data in transit", "Centralized authentication, authorization, and accounting", "Physical security for access points", "Virus scanning for wireless traffic"], answer: "B", explanation: "RADIUS is a AAA protocol that provides centralized authentication for network access, commonly used with WPA2/WPA3-Enterprise."},
+  {q: "Which mobile connection method typically has the widest coverage area?", options: ["Wi-Fi", "Bluetooth", "Cellular", "NFC"], answer: "C", explanation: "Cellular networks provide the broadest geographic coverage, though security varies by generation (3G/4G/5G) and encryption implementation."},
+  {q: "What does static code analysis examine?", options: ["Running application behavior", "Source code without executing it", "Network traffic patterns", "System performance metrics"], answer: "B", explanation: "Static analysis reviews source or compiled code for vulnerabilities without running the program, identifying issues early in development."},
+  {q: "Secure cookies should have which attribute to prevent client-side scripts from accessing them?", options: ["HttpOnly", "Secure", "Domain", "Expires"], answer: "A", explanation: "The HttpOnly flag prevents cookies from being accessed through client-side scripts, reducing risk of cross-site scripting (XSS) attacks stealing session data."},
+  {q: "What is a key consideration when hardening Industrial Control Systems (ICS/SCADA)?", options: ["They can be easily taken offline for patching", "Operational requirements may limit security implementation options", "They use standard Windows security tools", "They have no connectivity to other networks"], answer: "B", explanation: "ICS/SCADA systems often cannot be taken offline, may run legacy OSes, and have safety considerations that limit security options."},
+  {q: "Which wireless authentication protocol uses certificates for both server and client authentication?", options: ["EAP-TLS", "PEAP", "EAP-FAST", "EAP-MD5"], answer: "A", explanation: "EAP-TLS provides strong mutual authentication using digital certificates on both the server and client, requiring a PKI infrastructure."},
+  {q: "What is the primary goal of workstation hardening?", options: ["To make the workstation unusable for employees", "To reduce the attack surface by removing unnecessary components", "To increase processing speed", "To add more user features"], answer: "B", explanation: "Workstation hardening minimizes potential attack vectors by disabling unneeded services, applying patches, configuring firewalls, and implementing least privilege."},
+  {q: "In a CYOD (Choose Your Own Device) model, who typically selects the device from approved options?", options: ["The employee from a company-approved list", "The IT department assigns devices", "Only executives can choose", "Devices are randomly assigned"], answer: "A", explanation: "CYOD allows employees to select their device from a pre-approved list that meets corporate security requirements, balancing choice with manageability."},
+  {q: "Which cryptographic protocol is mandated in WPA3 for enterprise networks?", options: ["AES-CCMP", "TKIP", "RC4", "DES"], answer: "A", explanation: "WPA3 requires the use of AES-CCMP (128-bit or higher) for encryption in both personal and enterprise modes, phasing out weaker protocols."},
+  {q: "What does embedded system hardening often require due to resource constraints?", options: ["Lightweight security controls appropriate for limited resources", "Full enterprise antivirus suites", "Complex graphical user interfaces", "Frequent interactive user authentication"], answer: "A", explanation: "Embedded systems often have limited CPU, memory, and power, requiring efficient security measures rather than resource-intensive solutions."},
+  {q: "Which installation consideration helps prevent wireless signal leakage beyond building perimeters?", options: ["Using directional antennas and adjusting transmit power", "Implementing WPA3", "Requiring complex passwords", "Using MAC address filtering"], answer: "A", explanation: "Proper antenna selection and power adjustment contain signals within desired areas, reducing opportunities for external attackers."},
+  {q: "What is a secure baseline?", options: ["A starting point of minimum security configurations for a system", "The performance level of new hardware", "A backup of system settings", "The default factory configuration"], answer: "A", explanation: "A secure baseline establishes a consistent, hardened starting configuration that meets security requirements before systems are deployed."},
+
+// ====== 4.2: Security implications of proper hardware, software, and data asset management ======
+  {q: "During the acquisition process, what should be verified before purchasing software?", options: ["The vendor's office location", "Compatibility with existing security controls and support lifecycle", "Only the purchase price", "The software's color scheme"], answer: "B", explanation: "Security considerations in procurement include vendor reputation, patch support lifecycle, compatibility with security architecture, and secure development practices."},
+  {q: "What is the purpose of data classification in asset management?", options: ["To make files look organized", "To apply appropriate security controls based on data sensitivity", "To reduce storage costs", "To improve search functionality"], answer: "B", explanation: "Classification determines the value, sensitivity, and criticality of data, enabling appropriate protection levels (encryption, access controls, retention periods)."},
+  {q: "Which sanitization method is most appropriate for highly sensitive data on magnetic hard drives?", options: ["Deleting files", "Formatting the drive", "Degaussing or physical destruction", "Moving files to Recycle Bin"], answer: "C", explanation: "Degaussing uses strong magnetic fields to destroy data on magnetic media, while physical destruction (shredding, crushing) ensures data cannot be recovered."},
+  {q: "What does asset ownership establish in security management?", options: ["Who gets to use the asset most", "Accountability and responsibility for an asset's security", "Who paid for the asset", "The asset's physical location"], answer: "B", explanation: "Clear ownership assigns responsibility for maintaining an asset's security, including implementing controls, monitoring, and responding to incidents."},
+  {q: "Which tracking method uniquely identifies hardware assets throughout their lifecycle?", options: ["Memory size", "Asset tags and inventory databases", "Employee names written on devices", "The color of the device"], answer: "B", explanation: "Asset tagging with barcodes/RFID and maintaining an inventory database enables tracking from acquisition through disposal."},
+  {q: "What is the risk of improper decommissioning of storage devices?", options: ["Data breach through residual data recovery", "Increased electricity costs", "Physical injury from heavy equipment", "Software licensing issues"], answer: "A", explanation: "Without proper sanitization, sensitive data remains on storage media and can be recovered by unauthorized parties after disposal."},
+  {q: "Why is data retention policy important for asset management?", options: ["To maximize storage utilization", "To comply with legal requirements and minimize liability", "To make backups faster", "To organize files alphabetically"], answer: "B", explanation: "Retention policies define how long data must be kept (for compliance) and when it should be destroyed (to reduce risk and storage costs)."},
+  {q: "What does a certificate of destruction provide after media sanitization?", options: ["Proof that data was irretrievably destroyed", "A new warranty for the device", "Software installation media", "A tax deduction form"], answer: "A", explanation: "This documentation from a certified destruction service provides legal proof that data was properly destroyed according to policy."},
+  {q: "Which factor is crucial when enumerating software assets?", options: ["The software's icon design", "Version numbers and patch levels", "The programmer's name", "File sizes"], answer: "B", explanation: "Software inventory must track versions and patch status to identify vulnerable systems needing updates."},
+  {q: "What is the security implication of not maintaining accurate hardware inventory?", options: ["Inability to track and secure all organizational assets", "Better network performance", "Reduced insurance costs", "Simpler budgeting processes"], answer: "A", explanation: "Without accurate inventory, organizations cannot ensure all assets are properly secured, monitored, and included in disaster recovery plans."},
+  {q: "During procurement, what should be included in vendor agreements regarding security?", options: ["Only delivery dates", "Security requirements, breach notification procedures, and right-to-audit clauses", "Social media handles", "Office decor preferences"], answer: "B", explanation: "Contracts should specify security responsibilities, incident response obligations, compliance requirements, and verification rights."},
+  {q: "What does assignment refer to in asset accounting?", options: ["Giving assets to specific users or departments", "The asset's serial number", "The purchase price", "The disposal method"], answer: "A", explanation: "Assignment tracks who is responsible for an asset, enabling accountability and appropriate chargeback for usage."},
+  {q: "Why is monitoring asset lifespan important for security?", options: ["To plan retirement parties for old equipment", "To schedule replacement before end-of-life when security updates cease", "To calculate depreciation for taxes", "To determine resale value"], answer: "B", explanation: "Assets past their support lifecycle no longer receive security patches, creating vulnerabilities that must be addressed through replacement."},
+  {q: "What should happen to software licenses when decommissioning hardware?", options: ["Nothing - they expire with the hardware", "They should be transferred or properly retired according to license terms", "Sold online for profit", "Given to employees for personal use"], answer: "B", explanation: "License management ensures compliance during decommissioning, potentially allowing transfer to new equipment or proper retirement."},
+  {q: "Which disposal method is most secure for SSDs with sensitive data?", options: ["Quick format", "ATA Secure Erase or physical destruction", "Deleting partitions", "Using disk cleanup utilities"], answer: "B", explanation: "SSDs require specialized sanitization methods like ATA Secure Erase due to wear leveling, or physical destruction for highest assurance."},
+  {q: "What is the purpose of maintaining an asset's chain of custody records?", options: ["To track shipping costs", "To establish accountability each time an asset changes hands", "To determine original purchase date", "To calculate network bandwidth"], answer: "B", explanation: "Chain of custody documentation tracks who possessed an asset and when, important for forensic investigations and regulatory compliance."},
+  {q: "How does proper asset classification support incident response?", options: ["It makes systems run faster during incidents", "It helps prioritize response based on asset criticality", "It automatically patches vulnerable systems", "It reduces the number of alerts generated"], answer: "B", explanation: "Knowing which assets are most critical helps teams prioritize response efforts to protect business-essential functions first."},
+  {q: "What is enumeration in asset management?", options: ["Counting and documenting all assets in a structured way", "Guessing password combinations", "Setting asset prices", "Designing network diagrams"], answer: "A", explanation: "Enumeration creates a complete, detailed inventory that serves as the foundation for all other asset management activities."},
+  {q: "Why should data retention consider different data types?", options: ["Different colors look better in reports", "Regulations require different retention periods for different data types", "It makes backup systems cheaper", "User preferences vary"], answer: "B", explanation: "Legal, regulatory, and business requirements dictate different retention periods for financial records, PII, healthcare data, communications, etc."},
+  {q: "What is a security benefit of centralized asset tracking?", options: ["Reduced need for security policies", "Comprehensive visibility into all assets for risk management", "Elimination of all vulnerabilities", "Automatic password changes"], answer: "B", explanation: "Centralized tracking provides a single source of truth about assets, their security status, and compliance with policies."},
+  {q: "How does proper asset management support regulatory compliance?", options: ["By eliminating all audits", "By demonstrating control over protected data throughout its lifecycle", "By reducing paperwork", "By increasing system performance"], answer: "B", explanation: "Compliance frameworks require evidence that sensitive data is properly tracked, protected, and disposed of according to requirements."},
+
+// ====== 4.3: Security alerting and monitoring concepts and tools ======
+  {q: "What is the primary purpose of log aggregation?", options: ["To delete old log files", "To collect logs from multiple sources into a centralized system for analysis", "To reduce log file sizes", "To encrypt log data"], answer: "B", explanation: "Aggregation brings together logs from diverse systems (servers, network devices, applications) enabling correlated analysis across the environment."},
+  {q: "Which tool collects, normalizes, and correlates security events from multiple sources?", options: ["Antivirus", "DLP", "SIEM", "Vulnerability scanner"], answer: "C", explanation: "SIEM (Security Information and Event Management) systems provide real-time analysis of security alerts from various sources."},
+  {q: "What does SCAP (Security Content Automation Protocol) provide?", options: ["A standard for expressing security checklists and automating compliance", "Network encryption", "Physical access control", "Email filtering"], answer: "A", explanation: "SCAP standards enable automated vulnerability management, measurement, and policy compliance evaluation."},
+  {q: "What is the purpose of alert tuning in security monitoring?", options: ["To make alert sounds more pleasant", "To reduce false positives and ensure alerts are meaningful", "To increase the number of alerts", "To slow down response times"], answer: "B", explanation: "Tuning adjusts alert thresholds and rules to minimize noise (false positives) so analysts can focus on genuine threats."},
+  {q: "Which protocol is commonly used for network device monitoring and generates traps for specific events?", options: ["HTTP", "SNMP", "FTP", "SMTP"], answer: "B", explanation: "SNMP (Simple Network Management Protocol) allows monitoring of network devices, with traps sent to a management station when configured events occur."},
+  {q: "What does NetFlow data primarily provide for security monitoring?", options: ["File contents", "Network traffic flow statistics (source, destination, volume, protocol)", "Encryption keys", "User passwords"], answer: "B", explanation: "NetFlow records metadata about network conversations, useful for detecting anomalies, bandwidth abuse, and certain attack patterns."},
+  {q: "Which type of monitoring uses software installed on endpoints to collect data?", options: ["Agentless", "Agent-based", "Passive", "Network-based"], answer: "B", explanation: "Agent-based monitoring requires software installed on each monitored system, providing detailed host-based information."},
+  {q: "What is the main function of DLP (Data Loss Prevention) systems?", options: ["Prevent external attacks from entering", "Detect and prevent unauthorized data exfiltration", "Accelerate data transmission", "Compress data for storage"], answer: "B", explanation: "DLP monitors data in motion, at rest, and in use to prevent sensitive information from leaving the organization unauthorized."},
+  {q: "Why is archiving important in security monitoring?", options: ["To save money on storage", "To preserve logs for historical analysis, forensics, and compliance", "To make current logs easier to read", "To improve system performance"], answer: "B", explanation: "Archiving retains logs beyond operational needs for investigations, trend analysis, and meeting regulatory retention requirements."},
+  {q: "What does quarantine involve in alert response?", options: ["Deleting the affected system", "Isolating a compromised system to prevent spread", "Ignoring the alert", "Rebooting all network equipment"], answer: "B", explanation: "Quarantine isolates affected systems from the network to contain threats while investigation and remediation occur."},
+  {q: "Which tool compares system configurations against security benchmarks?", options: ["Vulnerability scanners", "Compliance scanners/configuration assessment tools", "Antivirus software", "Firewalls"], answer: "B", explanation: "Compliance tools use benchmarks (like CIS benchmarks) to check if systems are configured according to security policies."},
+  {q: "What is the difference between monitoring infrastructure vs. applications?", options: ["Infrastructure monitoring focuses on hardware/OS; application monitoring focuses on software behavior", "There is no difference", "Only infrastructure needs monitoring", "Applications can't be monitored"], answer: "A", explanation: "Infrastructure monitoring watches servers, network devices, and OS metrics; application monitoring tracks software performance, errors, and usage patterns."},
+  {q: "Which activity involves regularly checking systems for known vulnerabilities?", options: ["Log aggregation", "Vulnerability scanning", "Alert tuning", "Archiving"], answer: "B", explanation: "Vulnerability scanning systematically identifies security weaknesses in systems, applications, and networks."},
+  {q: "What does agentless monitoring use to collect data?", options: ["Locally installed software", "Standard protocols (SSH, WMI, SNMP) without permanent endpoint agents", "Physical inspection", "User interviews"], answer: "B", explanation: "Agentless monitoring uses existing protocols and services to gather data, avoiding the overhead of deploying and maintaining agents."},
+  {q: "Why is alert validation important in the response process?", options: ["To ensure alerts represent real incidents before taking action", "To generate more alerts", "To delete old alerts", "To slow down response teams"], answer: "A", explanation: "Validation confirms whether an alert indicates an actual security incident, preventing wasted resources on false positives."},
+  {q: "Which type of report would show trends in security events over time?", options: ["Real-time alert", "Historical trend analysis report", "Compliance report", "Inventory list"], answer: "B", explanation: "Trend reports analyze historical data to identify patterns, measure security program effectiveness, and predict future risks."},
+  {q: "How does antivirus software primarily detect malware?", options: ["By analyzing network traffic patterns", "Using signatures and heuristics to identify malicious code", "By monitoring user behavior", "By encrypting files"], answer: "B", explanation: "Traditional antivirus uses signature-based detection (known patterns) and heuristic analysis (suspicious behavior) to identify malware."},
+  {q: "What is a key benefit of centralized security monitoring?", options: ["Distributed responsibility", "Consolidated visibility and coordinated response across the environment", "Reduced need for skilled staff", "Elimination of all security tools"], answer: "B", explanation: "Centralization provides a unified view of security posture, enabling faster detection and coordinated response to cross-system threats."},
+  {q: "Which monitoring activity involves creating summaries of security status for management?", options: ["Scanning", "Reporting", "Alerting", "Archiving"], answer: "B", explanation: "Security reporting distills monitoring data into meaningful summaries, dashboards, and metrics for different stakeholders."},
+  {q: "What do SNMP traps provide in network monitoring?", options: ["Asynchronous notifications of events from managed devices", "Scheduled polling data", "User authentication", "Data encryption"], answer: "A", explanation: "Traps are unsolicited messages sent by SNMP agents when specific conditions occur, providing immediate notification of issues."},
+
+// ====== 4.4: Vulnerability management activities ======
+  {q: "What is the FIRST phase in the vulnerability management lifecycle?", options: ["Remediation", "Identification", "Analysis", "Reporting"], answer: "B", explanation: "The vulnerability management process begins with identifying vulnerabilities through scanning, testing, and threat intelligence."},
+  {q: "Which identification method involves simulating real attacks to discover vulnerabilities?", options: ["Vulnerability scanning", "Penetration testing", "Threat feed monitoring", "Static analysis"], answer: "B", explanation: "Penetration testing uses ethical hacking techniques to exploit vulnerabilities, demonstrating real-world impact beyond what scanners detect."},
+  {q: "What does CVSS (Common Vulnerability Scoring System) provide?", options: ["A list of all software vulnerabilities", "A standardized severity score for vulnerabilities", "Remediation instructions", "Vendor contact information"], answer: "B", explanation: "CVSS provides a consistent method for rating vulnerability severity (0-10) based on exploitability and impact metrics."},
+  {q: "What is a false positive in vulnerability scanning?", options: ["A correctly identified vulnerability", "A reported vulnerability that doesn't actually exist", "A severe vulnerability", "A patched vulnerability"], answer: "B", explanation: "False positives incorrectly flag systems as vulnerable, wasting remediation resources. Confirmation testing verifies scanner results."},
+  {q: "Which program rewards external researchers for responsibly disclosing vulnerabilities?", options: ["Penetration testing contract", "Bug bounty program", "Security audit", "Insurance policy"], answer: "B", explanation: "Bug bounty programs incentivize ethical hackers to report vulnerabilities through structured programs with defined rules and rewards."},
+  {q: "What is the purpose of a CVE (Common Vulnerabilities and Exposures) ID?", options: ["To identify specific vulnerabilities with a unique identifier", "To rate vulnerability severity", "To provide exploit code", "To track patch deployment"], answer: "A", explanation: "CVE provides standardized identifiers for publicly known vulnerabilities, enabling consistent reference across tools and discussions."},
+  {q: "Which analysis technique examines running applications to find vulnerabilities?", options: ["Static analysis", "Dynamic analysis", "Threat intelligence", "Vulnerability scanning"], answer: "B", explanation: "Dynamic application security testing (DAST) analyzes applications during execution to find runtime vulnerabilities."},
+  {q: "What does OSINT (Open Source Intelligence) refer to in threat feeds?", options: ["Classified government data", "Publicly available information sources", "Internal network logs", "Encrypted communications"], answer: "B", explanation: "OSINT collects information from public sources like forums, social media, code repositories, and news for threat intelligence."},
+  {q: "How should vulnerabilities typically be prioritized for remediation?", options: ["Alphabetically by software name", "By severity, exploit availability, and business impact", "By discovery date", "Randomly"], answer: "B", explanation: "Prioritization considers CVSS score, active exploitation, asset criticality, and difficulty of remediation to address highest risks first."},
+  {q: "What is responsible disclosure in vulnerability management?", options: ["Publicly releasing exploit code immediately", "Reporting vulnerabilities to vendors privately before public disclosure", "Ignoring vulnerabilities", "Selling vulnerabilities to hackers"], answer: "B", explanation: "Responsible disclosure gives vendors time to develop patches before details become public, reducing window of exposure."},
+  {q: "What does package monitoring in application security track?", options: ["Shipping containers", "Third-party libraries and dependencies for known vulnerabilities", "Network packets", "Employee packages"], answer: "B", explanation: "Software composition analysis monitors application dependencies for vulnerabilities in imported libraries and frameworks."},
+  {q: "Which factor considers how a vulnerability affects your specific environment?", options: ["Base score", "Environmental variables in CVSS", "Temporal score", "CVE ID"], answer: "B", explanation: "CVSS environmental metrics adjust the base score based on organizational factors like implemented controls and asset importance."},
+  {q: "What is the difference between a vulnerability and an exposure?", options: ["Vulnerabilities can be exploited; exposures are misconfigurations allowing unauthorized access", "No difference", "Exposures are more severe", "Vulnerabilities only affect software"], answer: "A", explanation: "A vulnerability is a flaw that could be exploited; an exposure is a misconfiguration or open access that increases risk."},
+  {q: "Why is threat feed information valuable for vulnerability management?", options: ["It provides information on actively exploited vulnerabilities in the wild", "It lists all possible vulnerabilities", "It automatically patches systems", "It reduces scanning needs"], answer: "A", explanation: "Threat intelligence identifies which vulnerabilities are being actively exploited, helping prioritize patching of imminent threats."},
+  {q: "What does segmentation provide as a vulnerability response?", options: ["Automatic patching", "Network isolation to limit exploit impact", "Vulnerability scanning", "Threat intelligence"], answer: "B", explanation: "Network segmentation contains compromised systems, preventing lateral movement even when vulnerabilities can't be immediately patched."},
+  {q: "Which vulnerability classification would describe a missing encryption vulnerability?", options: ["Buffer overflow", "Privilege escalation", "Cryptographic issue", "Input validation"], answer: "C", explanation: "Vulnerability classifications categorize flaws by type (cryptographic, injection, misconfiguration, etc.) for appropriate remediation."},
+  {q: "What does insurance provide in vulnerability response?", options: ["Automatic patching services", "Financial protection against incidents from unpatched vulnerabilities", "Vulnerability scanning", "Threat intelligence feeds"], answer: "B", explanation: "Cybersecurity insurance transfers some financial risk of incidents, though it doesn't replace proper vulnerability management."},
+  {q: "Which analysis method examines source code without executing it?", options: ["Dynamic analysis", "Static analysis", "Penetration testing", "Vulnerability scanning"], answer: "B", explanation: "Static application security testing (SAST) analyzes source code for vulnerabilities early in the software development lifecycle."},
+  {q: "What should happen after vulnerability remediation?", options: ["Nothing - the process ends", "Re-scan to verify the vulnerability is fixed", "Delete all scan reports", "Ignore similar vulnerabilities"], answer: "B", explanation: "Validation scanning confirms remediation effectiveness and ensures vulnerabilities are completely addressed."},
+  {q: "How does organizational risk tolerance affect vulnerability prioritization?", options: ["It determines which vulnerabilities the organization will accept vs. remediate", "It doesn't affect prioritization", "It increases all vulnerability scores", "It eliminates the need for scanning"], answer: "A", explanation: "Risk appetite defines what level of residual risk is acceptable, guiding which vulnerabilities require immediate action vs. accepted risk."},
+
+// ====== 4.5: Security implications of proper hardware, software, and data asset management ======
+  {q: "What does DMARC (Domain-based Message Authentication, Reporting & Conformance) help prevent?", options: ["Email encryption", "Email spoofing and phishing", "Email storage issues", "Email delivery speed"], answer: "B", explanation: "DMARC builds on SPF and DKIM to tell receiving servers how to handle emails that fail authentication, preventing domain spoofing."},
+  {q: "Which access control model uses labels and clearances?", options: ["Role-Based Access Control (RBAC)", "Mandatory Access Control (MAC)", "Discretionary Access Control (DAC)", "Rule-Based Access Control"], answer: "B", explanation: "MAC uses system-enforced labels (classification levels) and clearances. Access requires matching labels, not owner discretion."},
+  {q: "What is the primary purpose of file integrity monitoring?", options: ["To compress files", "To detect unauthorized changes to critical system files", "To encrypt files", "To delete old files"], answer: "B", explanation: "FIM compares current file states against baselines, alerting on changes that might indicate malware or unauthorized modifications."},
+  {q: "Which protocol does LDAP (Lightweight Directory Access Protocol) provide?", options: ["File transfer", "Directory services access for authentication and authorization", "Email delivery", "Network time synchronization"], answer: "B", explanation: "LDAP allows querying and modifying directory services (like Active Directory) for user authentication and authorization data."},
+  {q: "What does just-in-time permissions in privileged access management provide?", options: ["Permanent admin rights", "Temporary, time-limited elevated access only when needed", "No access controls", "Automatic privilege escalation"], answer: "B", explanation: "JIT permissions grant privileged access for specific tasks and limited time, reducing standing privileges that attackers could exploit."},
+  {q: "Which email security protocol allows receivers to check if an email was authorized by the domain owner?", options: ["DMARC", "SPF", "DKIM", "TLS"], answer: "B", explanation: "SPF (Sender Policy Framework) lists authorized sending IPs for a domain in DNS, letting receivers verify email origins."},
+  {q: "What is a screened subnet?", options: ["A network with no security", "Another term for DMZ - a network segment between internal and external networks", "A wireless network", "A virtual network"], answer: "B", explanation: "A screened subnet (DMZ) contains publicly accessible services, isolated from internal networks by firewalls."},
+  {q: "Which authentication factor category includes security keys?", options: ["Something you know", "Something you have", "Something you are", "Somewhere you are"], answer: "B", explanation: "Security keys (like YubiKey) are possession factors - physical devices you have in your possession."},
+  {q: "What does OAuth primarily enable?", options: ["File encryption", "Secure API authorization without sharing passwords", "Network routing", "Email filtering"], answer: "B", explanation: "OAuth allows applications to obtain limited access to user accounts without exposing credentials, using tokens instead."},
+  {q: "Which password practice is now discouraged by NIST guidelines?", options: ["Using long passwords", "Regular password expiration requirements", "Using password managers", "Multi-factor authentication"], answer: "B", explanation: "NIST now recommends not forcing regular password changes unless compromise is suspected, as it leads to predictable patterns."},
+  {q: "What does EDR (Endpoint Detection and Response) provide beyond traditional antivirus?", options: ["Only signature-based detection", "Advanced monitoring, detection, and response capabilities for endpoints", "Network traffic analysis", "Email security"], answer: "B", explanation: "EDR tools continuously monitor endpoints, use behavioral analytics, and provide investigation/response capabilities for advanced threats."},
+  {q: "Which protocol selection is most secure for remote administration?", options: ["Telnet", "HTTP", "SSH", "FTP"], answer: "C", explanation: "SSH provides encrypted remote access, unlike Telnet which sends credentials in clear text."},
+  {q: "What is the purpose of attestation in identity management?", options: ["Proving identity through verified documentation", "Changing passwords", "Encrypting emails", "Filtering web content"], answer: "A", explanation: "Attestation verifies user identity through documents, biometrics, or other evidence before granting system access."},
+  {q: "Which web filtering method uses a centralized server through which all web traffic flows?", options: ["Agent-based", "Centralized proxy", "DNS filtering", "URL scanning"], answer: "B", explanation: "A proxy server intercepts and filters all web requests, applying policies regardless of endpoint configuration."},
+  {q: "What does SELinux implement on Linux systems?", options: ["Mandatory Access Control policies", "Discretionary Access Control", "Role-Based Access Control", "No access control"], answer: "A", explanation: "SELinux (Security-Enhanced Linux) implements MAC using security policies that even root cannot override without policy changes."},
+  {q: "Which access control model allows owners to determine access to their resources?", options: ["MAC", "RBAC", "DAC", "ABAC"], answer: "C", explanation: "In DAC, resource owners (like file creators) control who can access their resources, common in consumer operating systems."},
+  {q: "What does password vaulting in PAM systems provide?", options: ["Physical safes for paper passwords", "Secure storage and management of privileged credentials", "Password generation only", "Password sharing tools"], answer: "B", explanation: "Password vaults securely store, manage, and rotate privileged passwords, controlling and logging their use."},
+  {q: "Which DNS filtering approach blocks malicious domains at the DNS resolution level?", options: ["Proxy filtering", "Content categorization", "Reputation filtering", "DNS-based filtering"], answer: "D", explanation: "DNS filtering blocks requests to malicious domains by returning incorrect IP addresses or blocking resolution entirely."},
+  {q: "What does time-of-day access restriction help prevent?", options: ["All access", "Unauthorized access during off-hours when legitimate users shouldn't be active", "Password changes", "Email delivery"], answer: "B", explanation: "Time-based restrictions limit access to certain hours, reducing risk from attacks occurring outside normal business hours."},
+  {q: "Which federation standard uses XML for exchanging authentication and authorization data?", options: ["LDAP", "OAuth", "SAML", "Kerberos"], answer: "C", explanation: "SAML uses XML assertions to transfer identity information between identity providers and service providers in federated environments."},
+];
+
+    let currentIdx = 0;
+    let score = 0;
+    let answeredCount = 0;
+    let answeredQuestions = new Set();
+
+    const qIdxEl = document.getElementById("qIdx");
+    const qTotalEl = document.getElementById("qTotal");
+    const questionEl = document.getElementById("question");
+    const choicesEl = document.getElementById("choices");
+    const explanationEl = document.getElementById("explanation");
+    const barEl = document.getElementById("bar");
+    const scoreEl = document.getElementById("score");
+    const answeredEl = document.getElementById("answered");
+    const navModal = document.getElementById("nav-modal");
+    const navGrid = document.getElementById("nav-grid");
+    const jumpInput = document.getElementById("jump-input");
+    const jumpBtn = document.getElementById("jump-btn");
+
+    function renderQuestion() {
+      const q = QUESTIONS[currentIdx];
+      qIdxEl.textContent = currentIdx + 1;
+      questionEl.textContent = q.q;
+      choicesEl.innerHTML = "";
+      explanationEl.style.display = "none";
+
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement("button");
+        btn.className = "choice";
+        btn.textContent = `${String.fromCharCode(65+i)}. ${opt}`;
+        btn.addEventListener("click", () => selectAnswer(btn, String.fromCharCode(65+i)));
+        choicesEl.appendChild(btn);
+      });
+
+      updateProgress();
+      updateNavGrid();
+    }
+
+    function selectAnswer(btn, choice) {
+      const q = QUESTIONS[currentIdx];
+      const buttons = choicesEl.querySelectorAll("button");
+      buttons.forEach(b => b.classList.add("disabled"));
+
+      if(choice === q.answer){
+        btn.classList.add("correct");
+        score++;
+      } else {
+        btn.classList.add("wrong");
+        buttons.forEach(b=>{
+          if(b.textContent.startsWith(q.answer)) b.classList.add("correct");
+        });
+      }
+
+      explanationEl.textContent = q.explanation;
+      explanationEl.style.display = "block";
+      answeredCount++;
+      answeredQuestions.add(currentIdx);
+      updateProgress();
+      updateNavGrid();
+    }
+
+    function updateProgress() {
+      barEl.style.width = `${((currentIdx+1)/QUESTIONS.length)*100}%`;
+      scoreEl.textContent = score;
+      answeredEl.textContent = answeredCount;
+    }
+
+    function updateNavGrid() {
+      navGrid.innerHTML = "";
+      for (let i = 0; i < QUESTIONS.length; i++) {
+        const btn = document.createElement("button");
+        btn.className = "nav-btn";
+        btn.textContent = i + 1;
+        
+        if (i === currentIdx) {
+          btn.classList.add("current");
+        }
+        
+        if (answeredQuestions.has(i)) {
+          btn.classList.add("answered");
+        }
+        
+        btn.addEventListener("click", () => {
+          currentIdx = i;
+          renderQuestion();
+          closeNavModal();
+        });
+        
+        navGrid.appendChild(btn);
+      }
+    }
+
+    function openNavModal() {
+      navModal.style.display = "flex";
+      updateNavGrid();
+      jumpInput.value = "";
+    }
+
+    function closeNavModal() {
+      navModal.style.display = "none";
+    }
+
+    function jumpToQuestion() {
+      const questionNum = parseInt(jumpInput.value);
+      if (questionNum >= 1 && questionNum <= QUESTIONS.length) {
+        currentIdx = questionNum - 1;
+        renderQuestion();
+        closeNavModal();
+      } else {
+        alert(`Please enter a number between 1 and ${QUESTIONS.length}`);
+      }
+    }
+
+    // Event listeners
+    document.getElementById("next").addEventListener("click", () => {
+      if(currentIdx < QUESTIONS.length - 1) currentIdx++;
+      renderQuestion();
+    });
+
+    document.getElementById("prev").addEventListener("click", () => {
+      if(currentIdx > 0) currentIdx--;
+      renderQuestion();
+    });
+
+    document.getElementById("restart").addEventListener("click", () => {
+      currentIdx = 0; 
+      score = 0; 
+      answeredCount = 0;
+      answeredQuestions.clear();
+      renderQuestion();
+    });
+
+    document.getElementById("nav-btn").addEventListener("click", openNavModal);
+    document.getElementById("close-nav").addEventListener("click", closeNavModal);
+    jumpBtn.addEventListener("click", jumpToQuestion);
+    jumpInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        jumpToQuestion();
+      }
+    });
+
+    // Close modal when clicking outside
+    navModal.addEventListener("click", (e) => {
+      if (e.target === navModal) {
+        closeNavModal();
+      }
+    });
+
+    // Initialize
+    qTotalEl.textContent = QUESTIONS.length;
+    renderQuestion();
+  </script>
+</body>
+</html>
