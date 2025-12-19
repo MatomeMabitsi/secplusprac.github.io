@@ -1,0 +1,360 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Security+ SY0-701 — 100-question interactive quiz</title>
+  <style>
+    :root {
+      --bg:#0f1724; --card:#0b1220; --accent:#7dd3fc; --muted:#94a3b8;
+      --optionText:#ffffff; --correct:#1aa96f; --wrong:#e24b4b;
+    }
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+    body{background:linear-gradient(180deg,#071226 0%, #071025 60%);color:#e6eef6;display:flex;align-items:center;justify-content:center;padding:20px}
+    .container{width:100%;max-width:980px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:12px;padding:18px;box-shadow:0 8px 30px rgba(2,6,23,0.7)}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    h1{font-size:18px;margin:0}
+    .meta{color:var(--muted);font-size:13px}
+    .card{background:var(--card);border-radius:10px;padding:18px;margin-top:12px}
+    .q-number{font-weight:600;color:var(--accent)}
+    .question{font-size:16px;margin:8px 0 16px}
+    .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .choice{color:var(--optionText);background:#071827;border:1px solid rgba(255,255,255,0.03);padding:12px;border-radius:8px;cursor:pointer;transition:transform .08s ease,box-shadow .08s ease;text-align:left}
+    .choice:hover{transform:translateY(-2px)}
+    .choice.disabled{cursor:default;opacity:0.9}
+    .choice.correct{border-color:rgba(34,197,94,0.9);box-shadow:0 6px 18px rgba(34,197,94,0.06)}
+    .choice.wrong{border-color:rgba(226,75,75,0.95);box-shadow:0 6px 18px rgba(226,75,75,0.06)}
+    .explanation{margin-top:12px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px;color:var(--muted);font-size:14px}
+    .controls{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:16px}
+    .left{display:flex;gap:12px;align-items:center}
+    button{background:var(--accent);border:0;padding:8px 12px;border-radius:8px;color:#012;cursor:pointer;font-weight:700}
+    button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    .progress{height:8px;background:#061018;border-radius:999px;overflow:hidden;flex:1}
+    .bar{height:8px;background:linear-gradient(90deg,var(--accent),#60a5fa);width:0%}
+    .score{font-weight:700}
+    footer{margin-top:14px;color:var(--muted);font-size:13px;text-align:center}
+    
+    /* Navigation modal styles */
+    .nav-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center}
+    .nav-content{background:var(--card);border-radius:12px;padding:20px;width:90%;max-width:500px;max-height:80vh;overflow-y:auto}
+    .nav-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+    .nav-title{font-size:18px;font-weight:600}
+    .close-btn{background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer}
+    .nav-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(50px, 1fr));gap:8px;margin-bottom:15px}
+    .nav-btn{background:#071827;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;text-align:center;cursor:pointer;transition:all 0.2s}
+    .nav-btn:hover{background:var(--accent);color:#012}
+    .nav-btn.current{background:var(--accent);color:#012;font-weight:bold}
+    .nav-btn.answered{background:rgba(26,169,111,0.2);border-color:rgba(26,169,111,0.5)}
+    .nav-input{display:flex;gap:10px;align-items:center}
+    .nav-input input{flex:1;background:#071827;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;color:white}
+    .nav-input button{white-space:nowrap}
+    
+    @media (max-width:640px){
+      .choices{grid-template-columns:1fr}
+      .container{padding:14px}
+      .nav-grid{grid-template-columns:repeat(auto-fill, minmax(40px, 1fr))}
+    }
+  </style>
+</head>
+<body>
+  <div class="container" role="main">
+    <header>
+      <div>
+        <h1>Security+ SY0-701 — 100-question practice quiz</h1>
+        <div class="meta">Immediate feedback — select an answer to reveal correct answer and explanation</div>
+      </div>
+      <div class="meta">Questions: <span id="total">100</span></div>
+    </header>
+
+    <div class="card">
+      <div><span class="q-number">Question <span id="qIdx">1</span> / <span id="qTotal">100</span></span></div>
+      <div class="question" id="question">Loading...</div>
+      <div class="choices" id="choices"></div>
+      <div class="explanation" id="explanation" style="display:none"></div>
+
+      <div class="controls">
+        <div class="left">
+          <button id="prev" class="secondary">◀ Previous</button>
+          <button id="next" class="secondary">Next ▶</button>
+          <button id="nav-btn" class="secondary">Jump to Question</button>
+          <div style="width:10px"></div>
+          <div class="progress" aria-hidden="true"><div class="bar" id="bar"></div></div>
+        </div>
+        <div>
+          <span class="score">Score: <span id="score">0</span> / <span id="answered">0</span></span>
+          <button id="restart" class="secondary" style="margin-left:10px">Restart</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>Built for study — covers controls, cryptography, change management, zero trust, physical security, deception tech and more.</footer>
+  </div>
+
+  <!-- Navigation Modal -->
+  <div class="nav-modal" id="nav-modal">
+    <div class="nav-content">
+      <div class="nav-header">
+        <div class="nav-title">Jump to Question</div>
+        <button class="close-btn" id="close-nav">&times;</button>
+      </div>
+      <div class="nav-grid" id="nav-grid"></div>
+      <div class="nav-input">
+        <input type="number" id="jump-input" min="1" max="100" placeholder="Enter question number">
+        <button id="jump-btn">Go</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const QUESTIONS = [
+// ====== 3.1: Compare and contrast security implications of different architecture models ======
+  {q: "In a public cloud shared responsibility model, who is typically responsible for securing the underlying hypervisor and physical infrastructure?", options: ["The cloud customer only", "The cloud service provider (CSP)", "A third-party managed service provider (MSP)", "Shared equally between customer and CSP"], answer: "B", explanation: "In the cloud shared responsibility model, the CSP is responsible for the security *of* the cloud (physical infrastructure, hypervisor). The customer is responsible for security *in* the cloud (data, access management)."},
+  {q: "What is a primary security concern when adopting Infrastructure as Code (IaC)?", options: ["Increased physical hardware costs", "Misconfigured templates being deployed at scale", "Slower deployment times for new resources", "Difficulty in automating manual tasks"], answer: "B", explanation: "IaC misconfigurations (e.g., insecure settings in templates) can be automatically and repeatedly deployed, creating widespread vulnerabilities."},
+  {q: "Which architecture model is characterized by lightweight, isolated application packages that share a host operating system kernel?", options: ["Virtualization", "Containerization", "Serverless", "Microservices"], answer: "B", explanation: "Containerization packages an application and its dependencies into a container, which is isolated but shares the host OS kernel for efficiency and portability."},
+  {q: "An industrial control system (ICS) that monitors a power grid is most likely to use which type of operating system for its field devices?", options: ["General-purpose OS like Windows 10", "Real-Time Operating System (RTOS)", "Containerized Linux OS", "Serverless function platform"], answer: "B", explanation: "ICS/SCADA devices often use Real-Time Operating Systems (RTOS) to provide deterministic, predictable responses to physical process inputs within strict time constraints."},
+  {q: "What is a key security benefit of a decentralized network architecture over a centralized one?", options: ["Simpler to manage all security policies from one point", "Reduced attack surface", "Provides inherent redundancy and resilience against single-point failures", "Lower initial setup cost"], answer: "C", explanation: "Decentralized architecture distributes resources, so the failure or compromise of one node does not necessarily bring down the entire network, improving resilience."},
+  {q: "Which consideration for architecture models directly relates to the ability to handle growing workloads without security degradation?", options: ["Responsiveness", "Scalability", "Ease of Deployment", "Risk Transference"], answer: "B", explanation: "Scalability is the ability of a system to handle increased load. A scalable architecture can grow without compromising performance or security controls."},
+  {q: "Transferring the operational risk of security monitoring to a Managed Security Service Provider (MSSP) is an example of what?", options: ["Compensating control", "Risk avoidance", "Risk transference", "Resilience planning"], answer: "C", explanation: "Risk transference involves shifting a risk to a third party, often through insurance or outsourcing services like an MSSP."},
+  {q: "What is a major security challenge specific to Internet of Things (IoT) devices?", options: ["Complex user interfaces", "Frequent and automatic security patching", "High compute power for advanced encryption", "Inability to patch and weak default credentials"], answer: "D", explanation: "Many IoT devices have hard-coded or weak passwords, lack secure update mechanisms, and often cannot be patched, making them vulnerable targets."},
+  {q: "Which network infrastructure concept involves physically separating a critical network from other networks to prevent any data flow?", options: ["Logical segmentation using VLANs", "Software-Defined Networking (SDN)", "Air-gapped isolation", "Zero Trust architecture"], answer: "C", explanation: "An air-gapped network is physically isolated with no direct or indirect connections to other networks, providing the highest level of isolation."},
+  {q: "Which of the following is a serverless computing platform?", options: ["AWS Lambda", "Docker Container", "VMware ESXi", "Microsoft Exchange Server"], answer: "A", explanation: "AWS Lambda is a Function-as-a-Service (FaaS) platform where developers deploy code without managing servers. The cloud provider dynamically manages resource allocation."},
+  {q: "What does the term 'hybrid considerations' refer to in a cloud security context?", options: ["Using only one cloud provider for all services", "The complexities of securing an environment that mixes on-premises and cloud resources", "A model where all security is the vendor's responsibility", "The process of migrating entirely to the cloud"], answer: "B", explanation: "Hybrid environments combine on-premises infrastructure with public/private cloud services, creating unique security challenges for data integration, identity management, and consistent policy enforcement."},
+  {q: "Microservices architecture improves responsiveness because:", options: ["Services are tightly integrated and deployed as one unit", "Individual services can be developed, updated, and scaled independently", "It requires less development skill than monolithic applications", "It eliminates the need for API security"], answer: "B", explanation: "The loose coupling of microservices allows teams to update and scale a single service without redeploying the entire application, enabling faster response to changes."},
+  {q: "Which factor is a common *consideration* when evaluating an architecture's 'Ease of Recovery'?", options: ["The color of the server racks", "The robustness of backup strategies and restoration procedures", "The brand of the network switches", "The programming language used"], answer: "B", explanation: "'Ease of Recovery' evaluates how quickly and simply systems can be restored after an incident, directly tied to the effectiveness of backups, disaster recovery plans, and restoration processes."},
+  {q: "Legacy SCADA systems in a manufacturing plant often face which security challenge?", options: ["Built-in modern encryption by default", "Inability to patch due to operational requirements and outdated components", "Excessive logging that fills storage quickly", "Automatic over-the-air updates"], answer: "B", explanation: "ICS/SCADA systems often cannot be taken offline for patching, run on outdated OSes no longer supported, and may have proprietary software, making them vulnerable and difficult to secure."},
+  {q: "Using a central SDN controller to dynamically push security policies to switches is an example of:", options: ["Physical isolation", "Software-Defined Networking security", "Air-gapped security", "Legacy network management"], answer: "B", explanation: "Software-Defined Networking (SDN) separates the control plane from the data plane, allowing centralized, programmable management of network flows and security policies."},
+  {q: "What is the primary goal of 'platform diversity' as a resilience strategy?", options: ["To reduce software licensing costs", "To ensure all systems are identical for easier management", "To limit the impact of a single platform-specific vulnerability", "To use the most popular platform available"], answer: "C", explanation: "Using diverse systems (e.g., mix of Windows, Linux, macOS) reduces the risk that a single vulnerability will affect the entire organization's infrastructure[citation:5]."},
+  {q: "In a virtualization model, what is the software that creates and runs virtual machines (VMs) called?", options: ["Guest OS", "Container Engine", "Hypervisor", "Microservice"], answer: "C", explanation: "The hypervisor (or Virtual Machine Monitor) is the software, firmware, or hardware that creates and manages virtual machines on a host system."},
+  {q: "Which statement best describes 'risk transference' in cloud architecture?", options: ["Eliminating a risk by not adopting a technology", "Accepting the potential loss from a risk", "Using insurance or contracts to shift financial risk to a third party", "Implementing technical controls to reduce risk"], answer: "C", explanation: "Risk transference involves shifting the financial burden or liability of a risk to another party, such as through cyber insurance or a cloud provider's Service Level Agreement (SLA)."},
+  {q: "When evaluating architecture models, 'patch availability' for a cloud service is typically:", options: ["Managed and provided by the cloud provider as part of the service", "The sole responsibility of the customer's security team", "Not applicable to cloud services", "Only available for virtual machines, not serverless functions"], answer: "A", explanation: "For managed cloud services (e.g., SaaS, PaaS, serverless), the CSP is responsible for patching the underlying platform. The customer's responsibility varies with the service model."},
+  {q: "Embedded systems, like those in a modern car, are primarily characterized by being:", options: ["General-purpose computers for multiple applications", "Dedicated to specific control functions within a larger system", "Always connected to the public internet", "Easy to upgrade and patch remotely"], answer: "B", explanation: "Embedded systems are specialized computing systems designed to perform dedicated functions, often with real-time constraints, as part of a larger mechanical or electrical system."},
+  {q: "What is a primary security implication of the 'inability to patch' a system?", options: ["The system becomes more secure over time", "Known vulnerabilities remain unaddressed, creating a persistent security risk", "It forces automatic updates, improving security", "It reduces the system's attack surface"], answer: "B", explanation: "If a system cannot be patched, it cannot be remediated against newly discovered vulnerabilities, leaving it exposed to known exploits indefinitely."},
+  {q: "Which architectural approach aims to minimize 'implicit trust zones' by verifying every request?", options: ["Flat Network Design", "Zero Trust", "Traditional Perimeter Security", "Air-gapped Networks"], answer: "B", explanation: "Zero Trust is a security model that assumes no trust for any entity inside or outside the network, requiring strict identity verification for every access request."},
+  {q: "Ensuring a continuous power supply to a data center using a UPS and generators addresses which architectural consideration?", options: ["Compute", "Availability", "Cost", "Responsiveness"], answer: "B", explanation: "Power redundancy (UPS for short-term, generators for long-term) is a critical control to maintain system availability during power outages[citation:2][citation:4]."},
+  {q: "In architecture 'considerations,' what does 'compute' refer to?", options: ["The network bandwidth available", "The availability of adequate processing resources to run security functions", "The physical building layout", "The cost of software licenses"], answer: "B", explanation: "The 'compute' consideration involves ensuring sufficient processing power, memory, and storage are available to support security measures like encryption, analytics, and monitoring without degrading performance."},
+  {q: "Which statement about a 'multi-cloud' strategy is true regarding resilience?", options: ["It locks an organization into a single vendor's ecosystem", "It can improve resilience by avoiding dependency on a single cloud provider", "It simplifies security management by using one set of tools", "It is always more expensive than a single-cloud strategy"], answer: "B", explanation: "Using multiple cloud providers (multi-cloud) can prevent a total outage if one provider experiences a disruption, enhancing overall resilience and availability[citation:2][citation:5]."},
+// ====== 3.2: Apply security principles to secure enterprise infrastructure ======
+  {q: "A security team places a network sensor on a mirrored switch port to monitor traffic. This device is operating in what mode?", options: ["Inline", "Active", "Tap/Monitor", "Fail-open"], answer: "C", explanation: "A device in tap or monitor mode receives a copy of network traffic (via a SPAN/mirror port) for analysis but cannot block traffic. It is passive, not inline."},
+  {q: "What is the primary purpose of a jump server (bastion host)?", options: ["To load balance web traffic", "To provide a secure, controlled point of access to manage devices in a sensitive network segment", "To act as a primary domain controller", "To filter spam email"], answer: "B", explanation: "A jump server is a hardened system that administrators first connect to, and from there, they can access more secure internal systems (like databases or servers). It reduces the attack surface[citation:7]."},
+  {q: "Which firewall type is specifically designed to understand web application logic and protect against attacks like SQL injection and cross-site scripting (XSS)?", options: ["Stateful Inspection Firewall", "Web Application Firewall (WAF)", "Unified Threat Management (UTM)", "Next-Generation Firewall (NGFW)"], answer: "B", explanation: "A WAF operates at Layer 7 (Application) and inspects HTTP/HTTPS traffic to filter and block specific web-based attacks that traditional firewalls might miss[citation:7]."},
+  {q: "In network device failure modes, what does 'fail-closed' mean?", options: ["The device shuts down all traffic when it fails", "The device allows all traffic to pass when it fails", "The device redirects traffic to a backup path", "The device sends an alert but continues operating"], answer: "A", explanation: "Also known as 'fail-secure,' a fail-closed device blocks all traffic if it experiences a failure. This is preferred for security-sensitive devices like firewalls to prevent unauthorized access during an outage."},
+  {q: "An Intrusion Prevention System (IPS) differs from an Intrusion Detection System (IDS) primarily because an IPS:", options: ["Only generates alerts", "Can actively block or prevent detected threats", "Is always a physical appliance", "Monitors only wireless networks"], answer: "B", explanation: "An IDS is a passive monitoring system that detects and alerts. An IPS is placed inline and can actively drop packets, reset connections, or block traffic to prevent the attack."},
+  {q: "Which technology is used for port-based network access control, requiring authentication before granting network access?", options: ["802.1X", "TLS", "DNS Filtering", "Load Balancing"], answer: "A", explanation: "IEEE 802.1X is a standard for port-based Network Access Control (NAC). It acts as a gatekeeper, preventing devices from communicating on the network until they are authenticated."},
+  {q: "Placing a web server in a DMZ (Demilitarized Zone) is an example of what infrastructure consideration?", options: ["Device placement in a security zone", "Implementing a fail-open system", "Using a passive sensor", "Centralizing all servers"], answer: "A", explanation: "A DMZ is a semi-trusted network segment. Placing publicly accessible servers there isolates them from the more secure internal network, limiting the attack surface if they are compromised."},
+  {q: "A Unified Threat Management (UTM) device typically combines several security functions into one appliance. Which is LEAST likely to be a core function of a UTM?", options: ["Stateful Firewall", "Intrusion Prevention System (IPS)", "Antivirus/Gateway Anti-malware", "Advanced Persistent Threat (APT) Sandboxing"], answer: "D", explanation: "While UTMs combine firewall, IPS, anti-malware, and often web filtering/VPN, advanced features like full sandboxing for APT detection are more commonly found in specialized platforms or NGFWs."},
+  {q: "What is a key characteristic of a Next-Generation Firewall (NGFW) compared to a traditional stateful firewall?", options: ["It can only filter based on IP address and port", "It includes application awareness and identity-based controls", "It is always less expensive", "It cannot perform deep packet inspection"], answer: "B", explanation: "NGFWs add intelligence to traditional firewalls, incorporating application-level inspection (identifying Facebook vs. web traffic), user/group identity integration, and often integrated IPS."},
+  {q: "A load balancer enhances security by:", options: ["Encrypting all data at rest on backend servers", "Hiding the internal architecture and preventing direct client-to-server connections", "Acting as a primary authentication server", "Patching vulnerabilities on web servers"], answer: "B", explanation: "A load balancer sits between clients and servers, distributing requests. This obscures the backend server details, preventing direct attacks and allowing the load balancer to filter malicious traffic."},
+  {q: "What protocol does 802.1X commonly use to encapsulate the authentication conversation?", options: ["Extensible Authentication Protocol (EAP)", "Secure Shell (SSH)", "Hypertext Transfer Protocol (HTTP)", "Simple Network Management Protocol (SNMP)"], answer: "A", explanation: "802.1X defines the framework for port-based access control. EAP is the flexible authentication protocol that runs inside 802.1X to carry the actual authentication messages (like EAP-TLS, PEAP)."},
+  {q: "Which device attribute describes a system that sits directly in the flow of network traffic and can modify or block it?", options: ["Passive", "Tap", "Inline", "Out-of-band"], answer: "C", explanation: "An inline device (e.g., firewall, IPS) is placed in the direct communication path between two network segments. All traffic must pass through it, allowing it to enforce policies in real-time."},
+  {q: "Implementing a VPN (Virtual Private Network) primarily addresses which requirement?", options: ["Secure communication/access for remote users", "Physical security of server rooms", "Power redundancy", "Onsite backup storage"], answer: "A", explanation: "A VPN creates an encrypted tunnel over a public network (like the internet), providing secure remote access to an organization's internal network resources."},
+  {q: "Which of the following best describes the 'attack surface' of an enterprise?", options: ["The brand of antivirus used", "The physical location of the data center", "The sum of all potential points where an unauthorized user can try to enter or extract data", "The number of employees in the IT department"], answer: "C", explanation: "The attack surface encompasses all hardware, software, network, and human elements that could be exploited by a threat actor. Reducing the attack surface is a key security principle."},
+  {q: "What is the main security purpose of segmenting a network logically (e.g., with VLANs)?", options: ["To increase broadcast traffic", "To contain potential breaches and limit lateral movement", "To make all devices accessible from any network point", "To reduce the need for firewalls"], answer: "B", explanation: "Logical segmentation (or microsegmentation) divides a network into smaller zones. If an attacker compromises one segment, it's harder for them to move laterally to other critical segments."},
+  {q: "A device that fails in a 'fail-open' state would, during a power loss:", options: ["Shut down and block all traffic", "Allow traffic to flow through without inspection", "Encrypt all passing traffic", "Send alerts to all administrators"], answer: "B", explanation: "A fail-open device allows traffic to pass unimpeded in the event of a failure. This prioritizes availability over security and might be used on non-critical inspection devices where downtime is unacceptable."},
+  {q: "In secure communication, TLS tunneling is used to:", options: ["Physically isolate networks", "Encapsulate and encrypt traffic from one network to travel over another", "Boost wireless signal strength", "Filter spam emails"], answer: "B", explanation: "TLS (Transport Layer Security) creates a secure, encrypted tunnel. It's the foundation for HTTPS and is used in many VPNs to protect data in transit between endpoints."},
+  {q: "A proxy server can enhance security for internal clients by:", options: ["Directly patching client operating systems", "Acting as an intermediary for requests, filtering content, and masking internal IP addresses", "Providing physical security at building entrances", "Generating backup power"], answer: "B", explanation: "A forward proxy sits between clients and the internet. It can filter malicious sites, cache content, and hide the internal IP addresses of the clients making requests."},
+  {q: "When applying security principles, placing sensitive database servers in a separate, highly restricted network segment is an example of:", options: ["Increasing the attack surface", "Using a jump server for access", "Device placement and security zoning", "Implementing a fail-closed load balancer"], answer: "C", explanation: "This is a direct application of device placement within security zones. Critical assets are placed in the most secure zones with the strictest access controls, separated from general user networks."},
+  {q: "An active security device, such as an IPS, is one that:", options: ["Only monitors and reports on traffic", "Can take automated actions to block or modify traffic", "Requires manual intervention for every alert", "Is always placed out-of-band"], answer: "B", explanation: "An active security device can automatically intervene in network traffic based on its configuration and detected threats (e.g., dropping packets, blocking IPs)."},
+  {q: "Which term describes a firewall rule that filters traffic based on source/destination IP, port, and protocol (Layers 3 & 4)?", options: ["Layer 7 rule", "Application-aware rule", "Layer 4 rule", "NGFW user-based rule"], answer: "C", explanation: "A Layer 4 firewall rule makes decisions based on network layer (IP) and transport layer (TCP/UDP port) information. Traditional stateful firewalls primarily operate at this level."},
+  {q: "A 'sensor' in the context of network appliances is typically used for:", options: ["Power regulation", "Collecting data and monitoring network traffic or environmental conditions", "Physically locking server racks", "Printing security logs"], answer: "B", explanation: "Sensors are devices that detect and respond to inputs (e.g., network packets, temperature, motion). In security, they collect data for systems like IDS, SIEM, or physical security monitoring."},
+  {q: "The principle of 'least privilege' applied to infrastructure means:", options: ["All users should have administrator access", "Network devices should be placed in the most convenient location", "Access permissions for systems and processes should be limited to only what is necessary", "Security zones should be eliminated to simplify access"], answer: "C", explanation: "Least privilege is a core security principle. For infrastructure, it means configuring services, accounts, and devices with the minimum permissions needed to function, reducing the impact of a compromise."},
+  {q: "What is a key difference between 'remote access' via VPN and standard internet access?", options: ["VPN access is always slower", "VPN provides an encrypted connection into the corporate network, making the remote user part of the internal network", "Standard internet access is more secure", "VPN does not require authentication"], answer: "B", explanation: "A remote access VPN authenticates the user and then creates a secure tunnel, logically placing the remote device on the internal corporate network as if it were locally connected."},
+  {q: "Implementing 'port security' on a network switch can help prevent which type of attack?", options: ["Phishing", "Unauthorized devices from connecting to a network port (e.g., MAC address spoofing)", "DDoS from the internet", "SQL Injection"], answer: "B", explanation: "Switch port security features can limit which MAC addresses can use a physical port, helping to prevent an unauthorized device from being plugged into a network jack and gaining access."},
+// ====== 3.3: Compare and contrast concepts and strategies to protect data ======
+  {q: "Which of the following is an example of regulated data?", options: ["A company's internal meeting notes", "Public marketing brochures", "Patient health records (PHI) under HIPAA", "A draft design for a new product"], answer: "C", explanation: "Regulated data is protected by laws and regulations. Examples include Protected Health Information (PHI), Payment Card Information (PCI), and Personally Identifiable Information (PII) under various laws."},
+  {q: "Replacing a credit card number with a random, non-sensitive token that maps back to the real number in a secure vault is called:", options: ["Encryption", "Hashing", "Tokenization", "Masking"], answer: "C", explanation: "Tokenization substitutes sensitive data with a non-sensitive placeholder (token) that has no exploitable value. The real data is stored separately in a secure token vault."},
+  {q: "What is the primary security goal of data masking used in non-production environments?", options: ["To improve application performance", "To create an irreversible copy of data", "To protect sensitive data while maintaining usability for testing", "To encrypt data for transmission"], answer: "C", explanation: "Data masking (or obfuscation) transforms sensitive data into realistic but fictional data. This allows developers and testers to work with realistic datasets without exposing real PII or secrets."},
+  {q: "Which data classification level would likely apply to a company's quarterly financial statements before public release?", options: ["Public", "Confidential", "Sensitive", "Restricted"], answer: "B", explanation: "'Confidential' or 'Internal Use Only' classifications are often used for sensitive business information like pre-release financials, which could impact the company if disclosed."},
+  {q: "The concept that data is subject to the laws of the country in which it is physically stored is known as:", options: ["Data masking", "Data sovereignty", "Geographic restriction", "Data in use"], answer: "B", explanation: "Data sovereignty refers to the legal concept that information is subject to the laws and governance structures of the nation where it is located, impacting where data can be stored and transferred."},
+  {q: "What is a 'data state'?", options: ["The country where data is stored", "A classification label like 'Top Secret'", "The condition of data as it is stored, transmitted, or processed", "The retention period for data"], answer: "C", explanation: "The three primary data states are: Data at Rest (stored), Data in Transit (moving over a network), and Data in Use (being processed in memory). Different security controls apply to each state."},
+  {q: "Applying AES-256 encryption to files on a laptop hard drive protects which data state?", options: ["Data in Transit", "Data in Use", "Data at Rest", "Data in Cache"], answer: "C", explanation: "Full-disk encryption or file-level encryption protects Data at Rest—information stored on a media device like a hard drive, SSD, or backup tape."},
+  {q: "Which method is irreversible and commonly used to verify data integrity (e.g., for passwords or file downloads)?", options: ["Symmetric Encryption (AES)", "Asymmetric Encryption (RSA)", "Hashing (SHA-256)", "Tokenization"], answer: "C", explanation: "Hashing is a one-way function that creates a unique fixed-size string (hash) from data. It's irreversible and used to verify that data has not been altered (integrity)."},
+  {q: "A company's secret recipe or proprietary manufacturing process is best classified as:", options: ["Trade secret", "Public information", "Legal information", "Regulated data"], answer: "A", explanation: "A trade secret is intellectual property (formulas, practices, designs) that derives economic value from not being generally known and is subject to reasonable efforts to maintain secrecy."},
+  {q: "Using file permissions and access control lists (ACLs) to ensure only HR staff can view employee salary data is an example of:", options: ["Geographic restriction", "Permission restrictions", "Obfuscation", "Hashing"], answer: "B", explanation: "Permission restrictions are a fundamental data protection strategy, using identity and access management (IAM) principles to control who can read, modify, or delete data."},
+  {q: "Blocking users from certain countries from accessing a web service is an example of:", options: ["Data sovereignty compliance", "Geographic restrictions", "Data masking", "Tokenization"], answer: "B", explanation: "Geographic restrictions (geofencing/geoblocking) limit access based on the user's perceived geographical location, often used for content licensing or regulatory compliance."},
+  {q: "What is a key difference between 'sensitive' and 'public' data classifications?", options: ["Public data requires stronger encryption", "Sensitive data requires protection due to potential harm from unauthorized disclosure", "Only public data needs backups", "Sensitive data has no retention requirements"], answer: "B", explanation: "Sensitive data (e.g., PII, credentials, intellectual property) can cause harm if exposed and requires protective controls. Public data (e.g., website content) is intended for open disclosure."},
+  {q: "Segmenting a database so that customer payment information is stored on a separate, more secure server than product descriptions is an example of:", options: ["Data segmentation", "Data masking", "Geographic restriction", "Hashing"], answer: "A", explanation: "Data segmentation involves physically or logically separating different types of data. This limits the scope of a breach—if one segment is compromised, the other remains protected."},
+  {q: "Which data protection method is designed to make reverse-engineering or understanding code or data difficult, even if accessed?", options: ["Encryption", "Obfuscation", "Tokenization", "Hashing"], answer: "B", explanation: "Obfuscation deliberately makes source code or data confusing and hard to interpret for humans or machines, while (ideally) preserving its functionality. It's not strong encryption but adds a layer of difficulty."},
+  {q: "Human-readable data differs from non-human-readable data in that:", options: ["It is always less secure", "It can be directly understood by people (e.g., plain text documents)", "It is always encrypted", "It is only found in databases"], answer: "B", explanation: "Human-readable data (e.g., .txt, .pdf, clear-text logs) is in a format people can read. Non-human-readable data (e.g., binary executables, encrypted files) requires processing or a key to be understood."},
+  {q: "Why is 'data in use' considered a challenging state to protect?", options: ["Because it is always encrypted during processing", "Because it must be decrypted to be processed by the CPU, making it vulnerable in memory", "Because it never leaves the storage device", "Because it is not covered by any regulations"], answer: "B", explanation: "Data in use is actively processed in system memory (RAM). To be used, it must be unencrypted, potentially exposing it to memory-scraping attacks or unauthorized processes if the system is compromised."},
+  {q: "A legal contract between a company and a vendor would be classified as what type of data?", options: ["Financial information", "Intellectual property", "Legal information", "Trade secret"], answer: "C", explanation: "Legal information includes contracts, non-disclosure agreements (NDAs), litigation documents, and other legally binding materials that require confidentiality and integrity."},
+  {q: "Which strategy is used to ensure backup tapes containing sensitive data cannot be read if lost in transit?", options: ["Data masking", "Backup encryption", "Geographic restriction", "Permission restriction"], answer: "B", explanation: "Encrypting backups (both onsite and offsite) protects the data at rest on the backup media. This is a critical control, especially for offsite backups that leave the physical control of the organization."},
+  {q: "The principle of encrypting data 'end-to-end' primarily protects which data state?", options: ["Data at Rest only", "Data in Transit only", "Both Data in Transit and Data at Rest on the endpoints", "Data in Use"], answer: "C", explanation: "End-to-end encryption ensures data is encrypted on the sender's device and only decrypted on the recipient's device. It protects data in transit and at rest on the communicating devices, but not on intermediate servers."},
+  {q: "Applying 'data minimization' principles helps with data protection by:", options: ["Collecting and retaining only the data absolutely necessary", "Encrypting all data multiple times", "Making multiple copies of all data", "Storing all data indefinitely"], answer: "A", explanation: "Data minimization is a privacy and security practice of limiting data collection to only what is directly relevant and necessary for a specified purpose. Less data collected means less data to protect and a smaller attack surface."},
+// ====== 3.4: Explain the importance of resilience and recovery in security architecture ======
+  {q: "What is the key difference between a 'hot site' and a 'cold site' for disaster recovery?", options: ["A hot site has power, a cold site does not", "A hot site is fully operational with synchronized data and ready for immediate failover; a cold site is a space with infrastructure but requires setup", "A hot site is for summer months only", "A cold site is always more expensive"], answer: "B", explanation: "A hot site is a duplicate of the primary site, with current data, ready for near-instantaneous recovery. A cold site is a bare facility (power, cooling, space) where equipment must be delivered and configured after a disaster, causing significant delay[citation:2][citation:5]."},
+  {q: "Which component provides immediate, short-term battery backup power during an outage to allow for orderly system shutdown or generator startup?", options: ["Generator", "Power Distribution Unit (PDU)", "Uninterruptible Power Supply (UPS)", "Redundant Power Supply"], answer: "C", explanation: "A UPS uses batteries to provide instantaneous power during an outage, bridging the gap until generators start or allowing for a safe shutdown, preventing data loss and hardware damage[citation:2]."},
+  {q: "A tabletop exercise is primarily used for:", options: ["Physically testing server failover", "Discussing and walking through response plans in a low-stress, discussion-based setting", "Simulating a full-scale cyber attack on the live network", "Testing backup generator fuel levels"], answer: "B", explanation: "A tabletop exercise is a discussion-based session where team members review their roles and the incident response plan step-by-step using a hypothetical scenario to identify gaps and improve coordination."},
+  {q: "What is the primary purpose of a 'snapshot' in backup strategies?", options: ["To create a physical copy of a server", "To capture the exact state of a system or dataset at a specific point in time, enabling rapid restoration to that moment", "To encrypt data in transit", "To permanently delete old data"], answer: "B", explanation: "A snapshot is a point-in-time copy of a system's state (often used in virtualized environments). It allows for very fast recovery to that exact moment, though it's typically stored on the same primary storage system."},
+  {q: "High availability is often achieved through clustering or load balancing. What is a key difference?", options: ["Clustering presents multiple servers as one system; load balancing distributes traffic across independent servers", "Load balancing is only for websites, clustering is for databases", "Clustering is cheaper to implement", "Load balancing requires all servers to share storage"], answer: "A", explanation: "In a cluster, servers work together as a single logical unit, often with shared storage. In load balancing, a front-end device distributes requests to a pool of independent servers that do not need to be aware of each other[citation:2][citation:5]."},
+  {q: "Which backup strategy involves copying only the data that has changed since the last backup of any type?", options: ["Full Backup", "Incremental Backup", "Differential Backup", "Snapshot"], answer: "B", explanation: "Incremental backups copy only data changed since the *last* backup (whether full or incremental). They are fast and use less storage but require the full backup and all incremental tapes to restore."},
+  {q: "A 'warm site' recovery location is best described as having:", options: ["No equipment or data", "Some hardware and possibly some data pre-installed, but not fully synchronized or ready", "An exact, real-time copy of the production site", "Only heating and cooling systems"], answer: "B", explanation: "A warm site is a compromise between hot and cold. It has some pre-configured hardware and possibly periodic data updates, reducing recovery time compared to a cold site but at lower cost than a hot site[citation:2][citation:5]."},
+  {q: "What is the main purpose of 'geographic dispersion' for recovery sites?", options: ["To reduce real estate costs", "To ensure the recovery site is in a different climate zone", "To protect against regional disasters (e.g., hurricanes, floods) that could take out both primary and nearby backup sites", "To be closer to the CEO's vacation home"], answer: "C", explanation: "Geographic dispersion ensures the disaster recovery site is far enough away from the primary site that a regional disaster is unlikely to impact both locations simultaneously[citation:2][citation:5]."},
+  {q: "In capacity planning for resilience, the 'people' element refers to ensuring:", options: ["There are enough chairs in the office", "Adequately trained personnel are available to manage security and recovery operations", "The company has a high headcount", "All employees have the latest smartphones"], answer: "B", explanation: "Resilience depends on human capital. 'People' capacity planning ensures enough skilled staff are available across departments (not just IT) to execute security and recovery procedures during an incident[citation:2]."},
+  {q: "'Journaling' in the context of databases and recovery helps by:", options: ["Deleting old transaction logs", "Keeping a chronological record of changes, enabling recovery to a specific point before a failure", "Increasing database performance", "Masking sensitive data"], answer: "B", explanation: "Journaling (or transaction logging) records all changes. If a database crashes, the journal can be replayed to restore the database to a consistent state right up to the point of failure, minimizing data loss."},
+  {q: "What is the goal of a 'failover' test?", options: ["To see if employees fail a phishing test", "To verify that systems can automatically or manually switch to redundant or backup systems without loss of function", "To test the tensile strength of server racks", "To check if power cords are plugged in"], answer: "B", explanation: "A failover test is a planned exercise to validate that redundancy mechanisms (like a standby server or network link) can successfully take over when the primary component is taken offline, ensuring business continuity."},
+  {q: "Using 'parallel processing' during an incident involves:", options: ["Running systems on two separate processors", "Running normal operations and recovery operations simultaneously to maintain continuity", "Processing backup tapes one after another", "Using only one task at a time"], answer: "B", explanation: "Parallel processing in a disaster recovery context means running critical business processes on backup systems while primary systems are being restored, minimizing downtime and operational impact."},
+  {q: "Which statement best describes 'replication' as a backup/availability strategy?", options: ["Copying data to tape once a week", "Creating a real-time or near-real-time duplicate of data to a secondary location", "Shredding paper documents", "Testing recovery plans annually"], answer: "B", explanation: "Replication continuously copies data changes to another location (synchronously or asynchronously). It supports high availability and disaster recovery with minimal Recovery Point Objectives (RPO), meaning very little data loss."},
+  {q: "What is the primary role of a 'generator' in power resilience?", options: ["To regulate voltage from the utility", "To provide long-term backup power after the UPS battery is depleted", "To power individual laptops", "To cool the data center"], answer: "B", explanation: "Generators (diesel, natural gas) are designed to provide extended backup power (hours or days) after a utility failure. They start automatically or manually after a brief period, taking over from the UPS."},
+  {q: "Why is 'testing' recovery plans considered crucial?", options: ["It is a regulatory requirement for everyone", "To ensure the plans work in practice and team members know their roles, uncovering flaws before a real disaster", "To give the IT team extra work", "Because plans never need updating once written"], answer: "B", explanation: "Untested plans often fail. Regular testing (tabletop, simulation, failover) validates procedures, ensures team competency, and identifies gaps or outdated steps that need correction[citation:2]."},
+  {q: "Offsite backups are critical because they protect data from:", options: ["Logical corruption only", "Localized physical disasters like fire, flood, or theft that could destroy both primary systems and onsite backups", "Network latency", "Viruses that only affect primary servers"], answer: "B", explanation: "Onsite backups are vulnerable to the same physical threats as the primary site. Offsite backups (geographically separate) ensure data survivability in case of a catastrophic local event."},
+  {q: "A 'simulation' test differs from a 'tabletop' exercise in that a simulation:", options: ["Is only done on paper", "Involves more realistic, hands-on execution of recovery steps, often in a isolated environment", "Never involves the security team", "Is required by law every month"], answer: "B", explanation: "A simulation test is more interactive and operational than a tabletop. It may involve actually spinning up backup systems, executing recovery scripts, and putting team members through a more realistic, timed scenario."},
+  {q: "Choosing to store backups in a different cloud region than your primary cloud resources is an example of applying which principle?", options: ["Platform diversity", "Geographic dispersion", "Capacity planning", "Ease of deployment"], answer: "B", explanation: "Using different cloud regions or availability zones for backups is the cloud equivalent of geographic dispersion, protecting against an outage or disaster affecting a single data center location."},
+  {q: "What is a key benefit of a 'multi-cloud' strategy for resilience?", options: ["It guarantees lower costs", "It avoids vendor lock-in and provides an option if one cloud provider has a major outage", "It simplifies management by using one console", "It eliminates the need for backups"], answer: "B", explanation: "A multi-cloud approach uses services from more than one cloud provider (e.g., AWS and Azure). This provides redundancy; if one provider has a widespread failure, services can potentially fail over to the other[citation:2][citation:5]."},
+  {q: "Ensuring backup 'frequency' aligns with the organization's Recovery Point Objective (RPO) means:", options: ["Backups must be completed within a certain time window", "Backups must be done often enough so that in a disaster, the amount of data lost (time between last backup and failure) is acceptable", "Backups must use specific software", "Only full backups count toward the RPO"], answer: "B", explanation: "The RPO defines the maximum tolerable amount of data loss measured in time. Backup frequency (e.g., hourly, daily) must be set to ensure data loss does not exceed this RPO threshold."},
+  {q: "Continuity of Operations Planning (COOP) focuses on:", options: ["Maintaining only IT functions during a disruption", "Maintaining essential functions across the entire organization during and after a disaster", "Planning office parties", "Ordering new furniture after a flood"], answer: "B", explanation: "COOP is a broader plan that ensures the organization's *mission-essential functions* continue. It goes beyond IT recovery to include personnel, facilities, communications, and manual workarounds[citation:5]."},
+];
+
+    let currentIdx = 0;
+    let score = 0;
+    let answeredCount = 0;
+    let answeredQuestions = new Set();
+
+    const qIdxEl = document.getElementById("qIdx");
+    const qTotalEl = document.getElementById("qTotal");
+    const questionEl = document.getElementById("question");
+    const choicesEl = document.getElementById("choices");
+    const explanationEl = document.getElementById("explanation");
+    const barEl = document.getElementById("bar");
+    const scoreEl = document.getElementById("score");
+    const answeredEl = document.getElementById("answered");
+    const navModal = document.getElementById("nav-modal");
+    const navGrid = document.getElementById("nav-grid");
+    const jumpInput = document.getElementById("jump-input");
+    const jumpBtn = document.getElementById("jump-btn");
+
+    function renderQuestion() {
+      const q = QUESTIONS[currentIdx];
+      qIdxEl.textContent = currentIdx + 1;
+      questionEl.textContent = q.q;
+      choicesEl.innerHTML = "";
+      explanationEl.style.display = "none";
+
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement("button");
+        btn.className = "choice";
+        btn.textContent = `${String.fromCharCode(65+i)}. ${opt}`;
+        btn.addEventListener("click", () => selectAnswer(btn, String.fromCharCode(65+i)));
+        choicesEl.appendChild(btn);
+      });
+
+      updateProgress();
+      updateNavGrid();
+    }
+
+    function selectAnswer(btn, choice) {
+      const q = QUESTIONS[currentIdx];
+      const buttons = choicesEl.querySelectorAll("button");
+      buttons.forEach(b => b.classList.add("disabled"));
+
+      if(choice === q.answer){
+        btn.classList.add("correct");
+        score++;
+      } else {
+        btn.classList.add("wrong");
+        buttons.forEach(b=>{
+          if(b.textContent.startsWith(q.answer)) b.classList.add("correct");
+        });
+      }
+
+      explanationEl.textContent = q.explanation;
+      explanationEl.style.display = "block";
+      answeredCount++;
+      answeredQuestions.add(currentIdx);
+      updateProgress();
+      updateNavGrid();
+    }
+
+    function updateProgress() {
+      barEl.style.width = `${((currentIdx+1)/QUESTIONS.length)*100}%`;
+      scoreEl.textContent = score;
+      answeredEl.textContent = answeredCount;
+    }
+
+    function updateNavGrid() {
+      navGrid.innerHTML = "";
+      for (let i = 0; i < QUESTIONS.length; i++) {
+        const btn = document.createElement("button");
+        btn.className = "nav-btn";
+        btn.textContent = i + 1;
+        
+        if (i === currentIdx) {
+          btn.classList.add("current");
+        }
+        
+        if (answeredQuestions.has(i)) {
+          btn.classList.add("answered");
+        }
+        
+        btn.addEventListener("click", () => {
+          currentIdx = i;
+          renderQuestion();
+          closeNavModal();
+        });
+        
+        navGrid.appendChild(btn);
+      }
+    }
+
+    function openNavModal() {
+      navModal.style.display = "flex";
+      updateNavGrid();
+      jumpInput.value = "";
+    }
+
+    function closeNavModal() {
+      navModal.style.display = "none";
+    }
+
+    function jumpToQuestion() {
+      const questionNum = parseInt(jumpInput.value);
+      if (questionNum >= 1 && questionNum <= QUESTIONS.length) {
+        currentIdx = questionNum - 1;
+        renderQuestion();
+        closeNavModal();
+      } else {
+        alert(`Please enter a number between 1 and ${QUESTIONS.length}`);
+      }
+    }
+
+    // Event listeners
+    document.getElementById("next").addEventListener("click", () => {
+      if(currentIdx < QUESTIONS.length - 1) currentIdx++;
+      renderQuestion();
+    });
+
+    document.getElementById("prev").addEventListener("click", () => {
+      if(currentIdx > 0) currentIdx--;
+      renderQuestion();
+    });
+
+    document.getElementById("restart").addEventListener("click", () => {
+      currentIdx = 0; 
+      score = 0; 
+      answeredCount = 0;
+      answeredQuestions.clear();
+      renderQuestion();
+    });
+
+    document.getElementById("nav-btn").addEventListener("click", openNavModal);
+    document.getElementById("close-nav").addEventListener("click", closeNavModal);
+    jumpBtn.addEventListener("click", jumpToQuestion);
+    jumpInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        jumpToQuestion();
+      }
+    });
+
+    // Close modal when clicking outside
+    navModal.addEventListener("click", (e) => {
+      if (e.target === navModal) {
+        closeNavModal();
+      }
+    });
+
+    // Initialize
+    qTotalEl.textContent = QUESTIONS.length;
+    renderQuestion();
+  </script>
+</body>
+</html>
