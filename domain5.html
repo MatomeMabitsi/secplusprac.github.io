@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Security+ SY0-701 — 100-question interactive quiz</title>
+  <style>
+    :root {
+      --bg:#0f1724; --card:#0b1220; --accent:#7dd3fc; --muted:#94a3b8;
+      --optionText:#ffffff; --correct:#1aa96f; --wrong:#e24b4b;
+    }
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+    body{background:linear-gradient(180deg,#071226 0%, #071025 60%);color:#e6eef6;display:flex;align-items:center;justify-content:center;padding:20px}
+    .container{width:100%;max-width:980px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:12px;padding:18px;box-shadow:0 8px 30px rgba(2,6,23,0.7)}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    h1{font-size:18px;margin:0}
+    .meta{color:var(--muted);font-size:13px}
+    .card{background:var(--card);border-radius:10px;padding:18px;margin-top:12px}
+    .q-number{font-weight:600;color:var(--accent)}
+    .question{font-size:16px;margin:8px 0 16px}
+    .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .choice{color:var(--optionText);background:#071827;border:1px solid rgba(255,255,255,0.03);padding:12px;border-radius:8px;cursor:pointer;transition:transform .08s ease,box-shadow .08s ease;text-align:left}
+    .choice:hover{transform:translateY(-2px)}
+    .choice.disabled{cursor:default;opacity:0.9}
+    .choice.correct{border-color:rgba(34,197,94,0.9);box-shadow:0 6px 18px rgba(34,197,94,0.06)}
+    .choice.wrong{border-color:rgba(226,75,75,0.95);box-shadow:0 6px 18px rgba(226,75,75,0.06)}
+    .explanation{margin-top:12px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:8px;color:var(--muted);font-size:14px}
+    .controls{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:16px}
+    .left{display:flex;gap:12px;align-items:center}
+    button{background:var(--accent);border:0;padding:8px 12px;border-radius:8px;color:#012;cursor:pointer;font-weight:700}
+    button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    .progress{height:8px;background:#061018;border-radius:999px;overflow:hidden;flex:1}
+    .bar{height:8px;background:linear-gradient(90deg,var(--accent),#60a5fa);width:0%}
+    .score{font-weight:700}
+    footer{margin-top:14px;color:var(--muted);font-size:13px;text-align:center}
+    
+    /* Navigation modal styles */
+    .nav-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center}
+    .nav-content{background:var(--card);border-radius:12px;padding:20px;width:90%;max-width:500px;max-height:80vh;overflow-y:auto}
+    .nav-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+    .nav-title{font-size:18px;font-weight:600}
+    .close-btn{background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer}
+    .nav-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(50px, 1fr));gap:8px;margin-bottom:15px}
+    .nav-btn{background:#071827;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;text-align:center;cursor:pointer;transition:all 0.2s}
+    .nav-btn:hover{background:var(--accent);color:#012}
+    .nav-btn.current{background:var(--accent);color:#012;font-weight:bold}
+    .nav-btn.answered{background:rgba(26,169,111,0.2);border-color:rgba(26,169,111,0.5)}
+    .nav-input{display:flex;gap:10px;align-items:center}
+    .nav-input input{flex:1;background:#071827;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px;color:white}
+    .nav-input button{white-space:nowrap}
+    
+    @media (max-width:640px){
+      .choices{grid-template-columns:1fr}
+      .container{padding:14px}
+      .nav-grid{grid-template-columns:repeat(auto-fill, minmax(40px, 1fr))}
+    }
+  </style>
+</head>
+<body>
+  <div class="container" role="main">
+    <header>
+      <div>
+        <h1>Security+ SY0-701 — 100-question practice quiz</h1>
+        <div class="meta">Immediate feedback — select an answer to reveal correct answer and explanation</div>
+      </div>
+      <div class="meta">Questions: <span id="total">100</span></div>
+    </header>
+
+    <div class="card">
+      <div><span class="q-number">Question <span id="qIdx">1</span> / <span id="qTotal">100</span></span></div>
+      <div class="question" id="question">Loading...</div>
+      <div class="choices" id="choices"></div>
+      <div class="explanation" id="explanation" style="display:none"></div>
+
+      <div class="controls">
+        <div class="left">
+          <button id="prev" class="secondary">◀ Previous</button>
+          <button id="next" class="secondary">Next ▶</button>
+          <button id="nav-btn" class="secondary">Jump to Question</button>
+          <div style="width:10px"></div>
+          <div class="progress" aria-hidden="true"><div class="bar" id="bar"></div></div>
+        </div>
+        <div>
+          <span class="score">Score: <span id="score">0</span> / <span id="answered">0</span></span>
+          <button id="restart" class="secondary" style="margin-left:10px">Restart</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>Built for study — covers controls, cryptography, change management, zero trust, physical security, deception tech and more.</footer>
+  </div>
+
+  <!-- Navigation Modal -->
+  <div class="nav-modal" id="nav-modal">
+    <div class="nav-content">
+      <div class="nav-header">
+        <div class="nav-title">Jump to Question</div>
+        <button class="close-btn" id="close-nav">&times;</button>
+      </div>
+      <div class="nav-grid" id="nav-grid"></div>
+      <div class="nav-input">
+        <input type="number" id="jump-input" min="1" max="100" placeholder="Enter question number">
+        <button id="jump-btn">Go</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const QUESTIONS = [
+// ====== 5.1: Elements of effective security governance ======
+  {q: "What is the highest-level document that defines an organization's security expectations and objectives?", options: ["Procedures", "Standards", "Policies", "Guidelines"], answer: "C", explanation: "Policies are high-level statements of management intent that define security expectations and provide the foundation for standards, procedures, and guidelines."},
+  {q: "Which policy defines appropriate use of organizational resources including computers, networks, and email?", options: ["Incident Response Policy", "Business Continuity Policy", "Acceptable Use Policy (AUP)", "Change Management Policy"], answer: "C", explanation: "The AUP specifies what users can and cannot do with organizational resources, often including consequences for violations."},
+  {q: "What do standards provide in the governance framework?", options: ["Optional recommendations", "Mandatory technical requirements to implement policies", "High-level management directives", "Step-by-step instructions"], answer: "B", explanation: "Standards are mandatory technical or operational requirements that specify how policies will be implemented consistently across the organization."},
+  {q: "Which governance element provides step-by-step instructions for performing specific tasks?", options: ["Policies", "Standards", "Procedures", "Guidelines"], answer: "C", explanation: "Procedures are detailed, step-by-step instructions that ensure tasks are performed consistently and correctly."},
+  {q: "What is a playbook in security governance?", options: ["A book of games for security teams", "Predefined response procedures for specific incident types", "A collection of security policies", "A list of approved software"], answer: "B", explanation: "Playbooks provide predefined, step-by-step response procedures for specific types of security incidents, enabling consistent and efficient response."},
+  {q: "Which external consideration might require specific data protection measures like GDPR compliance?", options: ["Industry standards", "Local regulations", "Global regulations", "Company preferences"], answer: "C", explanation: "Global regulations like GDPR impose requirements on organizations handling EU citizen data regardless of where the organization is located."},
+  {q: "What does the data controller determine in privacy frameworks?", options: ["How to physically store data", "The purposes and means of processing personal data", "Only technical implementation details", "Who to sell data to"], answer: "B", explanation: "The controller determines why and how personal data is processed, while processors act on the controller's instructions."},
+  {q: "Which governance structure typically has ultimate responsibility for organizational risk?", options: ["IT Department", "Security Committee", "Board of Directors", "Government Entities"], answer: "C", explanation: "The Board of Directors has ultimate responsibility for organizational risk oversight, though they often delegate day-to-day management to committees and executives."},
+  {q: "What is the primary purpose of monitoring and revision in governance?", options: ["To create more paperwork", "To ensure governance documents remain relevant and effective over time", "To eliminate all security measures", "To reduce IT budgets"], answer: "B", explanation: "Governance documents must be regularly reviewed and updated to address changing threats, technologies, regulations, and business needs."},
+  {q: "Which role is responsible for the day-to-day management and protection of data?", options: ["Data Owner", "Data Controller", "Data Processor", "Data Custodian/Steward"], answer: "D", explanation: "Custodians/stewards handle the operational aspects of data protection, implementing controls defined by owners and controllers."},
+  {q: "What does a centralized governance structure provide?", options: ["Consistent policies and standards across the organization", "Complete autonomy for departments", "No oversight", "Faster decision-making at all levels"], answer: "A", explanation: "Centralized governance ensures consistent security approaches organization-wide, though it may be less responsive to local needs."},
+  {q: "Which document would specify requirements for password complexity and expiration?", options: ["Password Policy", "Password Standard", "Password Procedure", "Password Guideline"], answer: "B", explanation: "Password standards would specify mandatory technical requirements like minimum length, complexity, and expiration periods to implement the password policy."},
+  {q: "What is the purpose of an Information Security Policy?", options: ["To list all software vulnerabilities", "To define the organization's approach to managing information security", "To provide daily operational instructions", "To track security incidents"], answer: "B", explanation: "This overarching policy establishes the organization's commitment to information security and provides the framework for the security program."},
+  {q: "Which governance element is recommended but not mandatory?", options: ["Standards", "Policies", "Guidelines", "Procedures"], answer: "C", explanation: "Guidelines provide recommendations and best practices but allow discretion in implementation, unlike mandatory standards."},
+  {q: "What does the Software Development Lifecycle (SDLC) policy ensure?", options: ["Software is developed quickly", "Security is integrated throughout the development process", "Only open-source software is used", "Developers work overtime"], answer: "B", explanation: "SDLC policies mandate security activities at each phase (requirements, design, development, testing, deployment, maintenance)."},
+  {q: "Which committee typically oversees security governance implementation?", options: ["Compensation Committee", "Security Steering Committee", "Social Committee", "No committee needed"], answer: "B", explanation: "Security Steering Committees with cross-functional representation guide security strategy, prioritize initiatives, and ensure alignment with business objectives."},
+  {q: "What is the difference between business continuity and disaster recovery policies?", options: ["They are identical", "BC focuses on maintaining operations; DR focuses on restoring after disruption", "BC is for small incidents only", "DR prevents all disruptions"], answer: "B", explanation: "Business continuity maintains essential functions during disruption; disaster recovery specifically restores IT systems and data after catastrophic events."},
+  {q: "Which external consideration might require specific encryption standards for healthcare data?", options: ["Industry standards", "National regulations like HIPAA", "Local ordinances", "Global trade agreements"], answer: "B", explanation: "National regulations like HIPAA in the US impose specific security requirements for protected health information."},
+  {q: "What does the data owner determine?", options: ["Who can access the data and how it's classified", "Only physical storage location", "Technical encryption methods", "Data backup schedules"], answer: "A", explanation: "Data owners (typically business executives) determine classification, access requirements, and protection needs based on business value and sensitivity."},
+  {q: "Why is change management included in governance?", options: ["To prevent any changes", "To ensure changes are controlled, documented, and don't introduce vulnerabilities", "To speed up all changes", "To eliminate testing"], answer: "B", explanation: "Change management procedures ensure changes are reviewed, tested, approved, and documented to maintain security and stability."},
+
+// ====== 5.2: Elements of the risk management process ======
+  {q: "What is the FIRST step in the risk management process?", options: ["Risk Analysis", "Risk Treatment", "Risk Identification", "Risk Monitoring"], answer: "C", explanation: "You cannot manage risks you haven't identified. The process begins with systematically identifying potential risks to the organization."},
+  {q: "Which risk assessment approach is conducted at regular intervals?", options: ["Ad hoc", "Recurring", "One-time", "Never"], answer: "B", explanation: "Recurring assessments (e.g., quarterly, annually) ensure risk profiles remain current as the environment and threat landscape evolve."},
+  {q: "What does qualitative risk analysis use?", options: ["Numerical values and financial calculations", "Subjective scales (High/Medium/Low) based on expert judgment", "Only historical data", "Automated tools only"], answer: "B", explanation: "Qualitative analysis uses relative scales and expert opinion, making it faster but less precise than quantitative methods."},
+  {q: "How is Single Loss Expectancy (SLE) calculated?", options: ["SLE = ARO × EF", "SLE = Asset Value × Exposure Factor", "SLE = ALE ÷ ARO", "SLE = Impact × Probability"], answer: "B", explanation: "SLE = Asset Value × Exposure Factor. It represents the monetary loss from a single occurrence of a threat."},
+  {q: "What does Annualized Loss Expectancy (ALE) represent?", options: ["Cost of a single incident", "Expected monetary loss per year for a specific risk", "Insurance premium cost", "Cost of security controls"], answer: "B", explanation: "ALE = SLE × Annualized Rate of Occurrence (ARO). It helps prioritize risks and justify security investments."},
+  {q: "Which risk management strategy involves purchasing insurance?", options: ["Risk Acceptance", "Risk Avoidance", "Risk Mitigation", "Risk Transfer"], answer: "D", explanation: "Transfer shifts risk to a third party, typically through insurance or outsourcing, though the organization often retains some residual risk."},
+  {q: "What is a risk register?", options: ["A list of insured assets", "A repository of identified risks with their characteristics and treatment plans", "A book of security policies", "A network device log"], answer: "B", explanation: "The risk register is the central document tracking identified risks, assessments, owners, treatments, and status."},
+  {q: "What does Recovery Time Objective (RTO) specify?", options: ["Maximum acceptable data loss", "Maximum acceptable downtime", "Cost of recovery", "Frequency of backups"], answer: "B", explanation: "RTO is the target time to restore business processes after a disruption. It drives disaster recovery capabilities."},
+  {q: "What does Recovery Point Objective (RPO) specify?", options: ["Maximum acceptable downtime", "Maximum acceptable data loss", "Time to detect incidents", "Cost per incident"], answer: "B", explanation: "RPO is the maximum acceptable amount of data loss measured in time. It drives backup frequency and data replication requirements."},
+  {q: "Which risk management strategy involves implementing security controls?", options: ["Risk Acceptance", "Risk Avoidance", "Risk Mitigation", "Risk Transfer"], answer: "C", explanation: "Mitigation reduces risk through implementation of safeguards, controls, or countermeasures."},
+  {q: "What is risk appetite?", options: ["The amount of risk an organization is willing to accept in pursuit of objectives", "A list of all risks", "The cost of risk management", "Insurance policy details"], answer: "A", explanation: "Risk appetite defines the types and amount of risk an organization will accept, guiding risk decisions across the enterprise."},
+  {q: "What does a conservative risk appetite indicate?", options: ["Willingness to accept high risk for high reward", "Unwillingness to accept any risk", "Preference for avoiding or minimizing risk", "No concern about risk"], answer: "C", explanation: "Conservative appetite prefers avoiding risk, implementing strong controls, and potentially missing opportunities that involve higher risk."},
+  {q: "What is the purpose of a Business Impact Analysis (BIA)?", options: ["To identify all possible threats", "To determine the criticality of business functions and their recovery requirements", "To calculate insurance costs", "To audit financial statements"], answer: "B", explanation: "BIA identifies critical functions, dependencies, and establishes RTOs/RPOs to prioritize recovery efforts."},
+  {q: "What is a risk threshold?", options: ["The point at which risk becomes unacceptable and requires action", "A list of all risks", "The cost of risk management", "Insurance deductible amount"], answer: "A", explanation: "Thresholds define quantitative or qualitative levels that trigger risk treatment activities when exceeded."},
+  {q: "Which formula calculates Annualized Rate of Occurrence (ARO)?", options: ["Number of incidents per year", "SLE × EF", "ALE ÷ SLE", "Asset Value × Impact"], answer: "A", explanation: "ARO is the estimated frequency (how many times per year) a threat is expected to occur."},
+  {q: "What does Mean Time Between Failures (MTBF) measure?", options: ["Time to restore a system", "Average time a system operates before failing", "Time to detect a failure", "Cost of failures"], answer: "B", explanation: "MTBF = Total operational time ÷ Number of failures. Higher MTBF indicates greater reliability."},
+  {q: "What does Mean Time To Repair (MTTR) measure?", options: ["Time between failures", "Average time to restore a system after failure", "Time to identify a failure", "Product lifespan"], answer: "B", explanation: "MTTR = Total repair time ÷ Number of repairs. Lower MTTR indicates faster recovery capability."},
+  {q: "Which risk response involves consciously deciding to take no action?", options: ["Risk Transfer", "Risk Avoidance", "Risk Acceptance", "Risk Mitigation"], answer: "C", explanation: "Acceptance means acknowledging the risk and consciously deciding to take no action, typically for risks below the organization's risk threshold."},
+  {q: "What are Key Risk Indicators (KRIs)?", options: ["Metrics that provide early warning of increasing risk", "Insurance policy numbers", "Risk management software tools", "List of risk owners"], answer: "A", explanation: "KRIs are metrics that signal changes in risk exposure, enabling proactive management before incidents occur."},
+  {q: "What is the difference between risk tolerance and risk appetite?", options: ["Appetite is the desired risk level; tolerance is the acceptable deviation", "They are identical", "Tolerance is always higher", "Appetite applies only to financial risk"], answer: "A", explanation: "Appetite is the desired risk level; tolerance defines acceptable variation around that target."},
+
+// ====== 5.3: Third-party risk assessment and management ======
+  {q: "What does a right-to-audit clause in a vendor contract provide?", options: ["Permission for the vendor to audit you", "Your organization's right to audit the vendor's security controls", "Automatic contract termination", "Price reduction guarantees"], answer: "B", explanation: "This clause allows you to verify the vendor's security practices, though actual audits can be costly and may require negotiation."},
+  {q: "What is the purpose of due diligence in vendor selection?", options: ["To select the cheapest vendor", "To thoroughly investigate a vendor's stability, security, and reliability before contracting", "To skip contract negotiations", "To avoid signing contracts"], answer: "B", explanation: "Due diligence assesses financial health, security posture, reputation, and compliance to minimize risk before establishing a relationship."},
+  {q: "Which agreement defines specific performance metrics like uptime percentages?", options: ["NDA", "SLA", "MOU", "BPA"], answer: "B", explanation: "Service Level Agreements (SLAs) specify measurable service quality metrics, remedies for failures, and reporting requirements."},
+  {q: "What does a Non-Disclosure Agreement (NDA) protect?", options: ["Service levels", "Confidential information shared between parties", "Payment terms", "Delivery schedules"], answer: "B", explanation: "NDAs legally bind parties to protect confidential information exchanged during the relationship."},
+  {q: "What is supply chain analysis in vendor assessment?", options: ["Analyzing shipping costs", "Evaluating risks from the vendor's own suppliers and subcontractors", "Counting inventory items", "Reviewing product packaging"], answer: "B", explanation: "You must understand risks throughout the supply chain, as vulnerabilities in a vendor's suppliers can impact your organization."},
+  {q: "Which document outlines specific tasks, deliverables, and timelines for a project?", options: ["SLA", "SOW", "NDA", "MOU"], answer: "B", explanation: "Statements of Work (SOW) detail specific project requirements, deliverables, milestones, and acceptance criteria."},
+  {q: "What is the purpose of vendor monitoring?", options: ["To eliminate all vendor relationships", "To continuously assess ongoing vendor performance and risk", "To reduce payments", "To avoid communication"], answer: "B", explanation: "Continuous monitoring ensures vendors maintain agreed security standards and promptly address new vulnerabilities or incidents."},
+  {q: "Which agreement is less formal than a contract but indicates intent to cooperate?", options: ["SLA", "MSA", "MOU", "SOW"], answer: "C", explanation: "Memoranda of Understanding (MOU) outline mutual goals and cooperation but are typically not legally binding contracts."},
+  {q: "What do security questionnaires assess in third-party risk?", options: ["Vendor's financial statements only", "The vendor's security controls and practices", "Employee birthdays", "Office locations only"], answer: "B", explanation: "Standardized questionnaires (like SIG, CAIQ) gather consistent information about vendor security postures for comparison and assessment."},
+  {q: "What does a Master Service Agreement (MSA) establish?", options: ["Specific project details", "Overall terms for a continuing business relationship", "Confidentiality only", "Payment for one transaction"], answer: "B", explanation: "MSAs define the general legal and commercial terms, while individual SOWs specify project-specific details under the MSA."},
+  {q: "Why is conflict of interest assessment important in vendor selection?", options: ["To ensure vendors don't work with competitors", "To identify situations that might compromise objective decision-making", "To get better pricing", "To share employees"], answer: "B", explanation: "Identifying conflicts ensures selection is based on merit and prevents compromised decisions that could increase risk."},
+  {q: "What should vendor penetration testing results demonstrate?", options: ["Perfect security with no vulnerabilities", "The vendor's commitment to identifying and addressing security weaknesses", "Only network diagrams", "Employee names"], answer: "B", explanation: "Regular penetration testing shows proactive security posture, but be wary of vendors claiming zero vulnerabilities."},
+  {q: "Which agreement between business partners outlines mutual responsibilities?", options: ["NDA", "BPA", "SLA", "MOU"], answer: "B", explanation: "Business Partner Agreements (BPAs) define the relationship, responsibilities, and terms between strategic business partners."},
+  {q: "What is the purpose of independent third-party assessments?", options: ["To replace your own assessments", "To provide objective validation of vendor security claims", "To reduce assessment costs", "To make vendors happy"], answer: "B", explanation: "Reports from reputable auditors (like SOC 2, ISO 27001) provide standardized, objective evidence of security controls."},
+  {q: "Why is continuous vendor monitoring important?", options: ["Vendor risk is static", "Vendor risk changes over time with new threats, vulnerabilities, and business changes", "It's required by all contracts", "It eliminates all risk"], answer: "B", explanation: "Vendor security postures can degrade; new vulnerabilities emerge; business changes occur—all requiring ongoing monitoring."},
+  {q: "What should evidence of internal audits provide?", options: ["Proof of perfect security", "That the vendor has internal processes to identify and address control deficiencies", "Customer lists", "Financial projections"], answer: "B", explanation: "Effective internal audit programs demonstrate maturity and continuous improvement, not perfection."},
+  {q: "What do rules of engagement define in third-party testing?", options: ["Social rules for meetings", "Authorized activities, boundaries, and communication protocols for security testing", "Payment schedules", "Contract termination conditions"], answer: "B", explanation: "Clear ROE prevent misunderstandings during penetration testing or other security assessments of third parties."},
+  {q: "Which factor is LEAST important in vendor security assessment?", options: ["Security control maturity", "Office décor and furniture quality", "Incident response capabilities", "Compliance with relevant regulations"], answer: "B", explanation: "While physical security matters, aesthetic factors don't directly impact information security risk."},
+  {q: "What does a Memorandum of Agreement (MOA) typically represent?", options: ["Informal cooperation intent", "A legally binding agreement more formal than an MOU", "Only payment terms", "Employee exchange programs"], answer: "B", explanation: "MOAs are more formal than MOUs and often create legally binding commitments between parties."},
+  {q: "Why assess a vendor's subcontractors?", options: ["To eliminate all subcontracting", "Because vulnerabilities in the supply chain can affect your security", "To get cheaper prices", "To hire them directly"], answer: "B", explanation: "Your risk extends to your vendor's vendors—a breach at a subcontractor can compromise your data or services."},
+
+// ====== 5.4: Elements of effective security compliance ======
+  {q: "What is the primary purpose of compliance reporting?", options: ["To create unnecessary paperwork", "To demonstrate adherence to laws, regulations, and standards", "To hide security issues", "To reduce security budgets"], answer: "B", explanation: "Compliance reporting provides evidence to regulators, auditors, and stakeholders that requirements are being met."},
+  {q: "Which consequence of non-compliance can result in monetary penalties?", options: ["Reputational damage", "Fines", "Loss of license", "Contract termination"], answer: "B", explanation: "Regulatory fines can be substantial (millions under GDPR, HIPAA, etc.) and are a direct financial consequence."},
+  {q: "What does due care represent in legal contexts?", options: ["Taking reasonable steps to protect information", "Perfect security", "Ignoring risks", "Only following minimum requirements"], answer: "A", explanation: "Due care means taking reasonable precautions; due diligence means ongoing efforts to maintain those protections."},
+  {q: "What is the 'right to be forgotten' under privacy regulations?", options: ["Right to delete social media accounts", "Right to have personal data erased under certain conditions", "Right to avoid all data collection", "Right to use pseudonyms"], answer: "B", explanation: "Also called right to erasure, this GDPR provision allows individuals to request deletion of their personal data."},
+  {q: "What does a data inventory support in privacy compliance?", options: ["Tracking office supplies", "Knowing what personal data you have, where it is, and how it flows", "Monitoring employee productivity", "Calculating server costs"], answer: "B", explanation: "You cannot protect or properly manage data you don't know exists. Data mapping is foundational for privacy compliance."},
+  {q: "Which compliance activity involves stakeholders formally acknowledging policies?", options: ["Automation", "Attestation", "Monitoring", "Reporting"], answer: "B", explanation: "Attestation requires individuals to formally acknowledge they have read, understood, and will comply with policies."},
+  {q: "What can loss of license due to non-compliance result in?", options: ["Inability to legally operate the business", "Minor inconvenience", "Reduced paperwork", "Lower standards"], answer: "A", explanation: "Certain industries (finance, healthcare) require licenses to operate; non-compliance can lead to revocation."},
+  {q: "What is the difference between data controller and processor in privacy laws?", options: ["Controller processes data; processor determines purposes", "Controller determines purposes; processor acts on controller's instructions", "No difference", "Only controllers face penalties"], answer: "B", explanation: "Controllers decide why and how data is processed; processors handle data on behalf of controllers under contractual terms."},
+  {q: "Why is automation valuable for compliance monitoring?", options: ["To eliminate human involvement", "To consistently and efficiently check controls at scale", "To increase costs", "To create more reports"], answer: "B", explanation: "Automated compliance checks provide continuous validation, reduce manual effort, and improve consistency."},
+  {q: "What does reputational damage from non-compliance affect?", options: ["Only stock price", "Customer trust, brand value, and competitive position", "Only IT department", "Building maintenance"], answer: "B", explanation: "Loss of trust can have long-term business impacts beyond immediate fines or legal consequences."},
+  {q: "What is the purpose of data retention policies in compliance?", options: ["To keep all data forever", "To legally define how long data is kept and ensure proper disposal", "To increase storage costs", "To complicate data recovery"], answer: "B", explanation: "Retention policies balance legal/regulatory requirements to keep data with risks/costs of retaining it unnecessarily."},
+  {q: "What does a data subject refer to in privacy regulations?", options: ["A database topic", "An identifiable individual about whom personal data is processed", "A type of data classification", "A security control"], answer: "B", explanation: "The data subject is the individual whose personal data is being processed, granted specific rights under regulations."},
+  {q: "Which compliance approach involves internal teams checking their own adherence?", options: ["External audit", "Regulatory examination", "Self-assessment", "Independent verification"], answer: "C", explanation: "Self-assessments help identify gaps proactively but lack the objectivity of independent audits."},
+  {q: "What is the legal implication of violating global privacy regulations for multinational companies?", options: ["Only local penalties apply", "Fines and sanctions can apply across jurisdictions", "No implications", "Only affects marketing"], answer: "B", explanation: "Companies operating internationally must comply with all applicable regulations, facing penalties in each jurisdiction where they violate laws."},
+  {q: "What does contractual impact of non-compliance refer to?", options: ["Employment contracts", "Breach of vendor/client contracts requiring specific security standards", "Social contracts", "Real estate leases"], answer: "B", explanation: "Many contracts include compliance requirements; violations can trigger penalties, termination, or liability for damages."},
+  {q: "Why is ongoing compliance monitoring necessary?", options: ["Compliance is a one-time achievement", "Requirements and business environments change continuously", "To annoy employees", "It's optional"], answer: "B", explanation: "New regulations emerge, business changes occur, and controls can degrade—requiring continuous monitoring."},
+  {q: "What should internal compliance reporting provide to management?", options: ["Only good news", "Accurate view of compliance status, gaps, and risks", "Detailed technical logs", "Competitor information"], answer: "B", explanation: "Management needs honest assessments to make informed decisions about resource allocation and risk acceptance."},
+  {q: "What is the role of an audit committee in compliance?", options: ["To perform technical audits", "To provide independent oversight of financial reporting and compliance", "To write code", "To manage security tools"], answer: "B", explanation: "Typically a board subcommittee, they oversee internal controls, risk management, and compliance processes."},
+  {q: "What does 'ownership' mean in data privacy context?", options: ["Individuals own their personal data and have rights over it", "Organizations own customer data absolutely", "No ownership concepts apply", "Only governments own data"], answer: "A", explanation: "Privacy regulations establish that individuals have rights over their personal data, even when organizations control it."},
+  {q: "Why document compliance efforts even when not fully compliant?", options: ["To hide deficiencies", "To demonstrate due care and proactive efforts to regulators", "To increase fines", "To confuse auditors"], answer: "B", explanation: "Documented efforts to achieve compliance can mitigate penalties by showing good faith attempts."},
+
+// ====== 5.5: Types and purposes of audits and assessments ======
+  {q: "What is the primary purpose of an internal audit?", options: ["To prepare for external audits", "To independently evaluate controls and provide assurance to management", "To eliminate all security spending", "To punish departments"], answer: "B", explanation: "Internal audits provide independent, objective assurance on governance, risk management, and control effectiveness."},
+  {q: "Which audit type is conducted by regulators to verify compliance with laws?", options: ["Internal audit", "Third-party audit", "Regulatory examination", "Self-assessment"], answer: "C", explanation: "Regulatory examinations (by agencies like SEC, FDIC) enforce specific legal and regulatory requirements."},
+  {q: "What does a known environment penetration test assume?", options: ["No information is provided to testers", "Partial information is provided", "Full information (network diagrams, credentials) is provided", "Only public information is used"], answer: "C", explanation: "White box testing with full knowledge simulates an insider threat or assesses specific control effectiveness."},
+  {q: "Which reconnaissance method doesn't interact directly with target systems?", options: ["Active reconnaissance", "Passive reconnaissance", "Port scanning", "Vulnerability scanning"], answer: "B", explanation: "Passive recon uses publicly available information (OSINT) without touching target systems, avoiding detection."},
+  {q: "What is the purpose of an independent third-party audit?", options: ["To replace internal audits", "To provide objective validation for stakeholders like customers or regulators", "To reduce audit costs", "To avoid internal reviews"], answer: "B", explanation: "External audits provide credibility through independence, often required by regulations or customer contracts."},
+  {q: "What does an unknown environment penetration test simulate?", options: ["Internal developer testing", "External attacker with no inside information", "Compliance checking", "Accidental discovery"], answer: "B", explanation: "Black box testing with no prior knowledge simulates an external attacker's perspective."},
+  {q: "Which committee typically oversees the internal audit function?", options: ["Social Committee", "Audit Committee of the Board", "IT Department", "Marketing Team"], answer: "B", explanation: "The audit committee ensures audit independence, reviews findings, and monitors management's corrective actions."},
+  {q: "What is the difference between offensive and defensive penetration testing?", options: ["Offensive finds vulnerabilities; defensive tests detection/response", "They are identical", "Only offensive is legal", "Defensive is more aggressive"], answer: "A", explanation: "Offensive (red team) simulates attackers; defensive (blue team) tests detection and response capabilities."},
+  {q: "What does active reconnaissance involve?", options: ["Only reading public websites", "Direct interaction with target systems (scanning, probing)", "Interviewing employees", "Reviewing financial reports"], answer: "B", explanation: "Active techniques like port scanning interact with targets and risk detection by security monitoring."},
+  {q: "What is an integrated penetration test?", options: ["Testing only one system", "Coordinated exercise testing people, processes, and technology together", "Only social engineering", "Automated scanning only"], answer: "B", explanation: "Integrated/purple team exercises combine offensive and defensive teams to improve overall security posture collaboratively."},
+  {q: "Which assessment provides the most realistic simulation of advanced attackers?", options: ["Vulnerability scan", "Compliance audit", "Red team exercise", "Configuration review"], answer: "C", explanation: "Red teams use advanced, stealthy techniques mimicking sophisticated threat actors over extended periods."},
+  {q: "What does a partially known environment test provide?", options: ["No information to testers", "Some information (like employee names) but not full access", "Complete network maps", "Only physical access information"], answer: "B", explanation: "Gray box testing balances realism (some outsider knowledge) with efficiency (not starting from zero)."},
+  {q: "Why are physical penetration tests important?", options: ["They're easier than technical tests", "They assess physical security controls like access points, locks, and sensors", "They only test guards", "They replace all other tests"], answer: "B", explanation: "Physical security bypass can lead to technical compromise; testing identifies weaknesses in physical controls."},
+  {q: "What should audit scope clearly define?", options: ["Only systems to be tested", "Systems, processes, time period, and rules of engagement", "Auditor vacation schedules", "Lunch arrangements"], answer: "B", explanation: "Clear scope prevents misunderstandings, ensures coverage of critical areas, and defines boundaries for testing."},
+  {q: "Which type of assessment focuses on adherence to specific standards?", options: ["Penetration test", "Compliance audit", "Risk assessment", "Vulnerability scan"], answer: "B", explanation: "Compliance audits verify adherence to specific frameworks (PCI DSS, HIPAA, ISO 27001) rather than overall security."},
+  {q: "What is the key difference between an audit and an assessment?", options: ["Audits are always external", "Audits provide formal opinion; assessments are more informal evaluations", "Assessments are more expensive", "Only audits have value"], answer: "B", explanation: "Audits follow formal standards and issue opinions; assessments are broader evaluations that may inform audits."},
+  {q: "Why include social engineering in penetration tests?", options: ["It's the easiest test", "Humans are often the weakest link; tests organizational resilience", "It doesn't require planning", "Technical controls are perfect"], answer: "B", explanation: "Social engineering tests human elements, policies, and awareness—critical components often exploited by real attackers."},
+  {q: "What does regulatory examination typically focus on?", options: ["Technical vulnerability counts", "Specific legal/regulatory requirements for the industry", "Employee satisfaction", "Office aesthetics"], answer: "B", explanation: "Examiners verify compliance with laws specific to that industry (banking, healthcare, energy, etc.)."},
+  {q: "What is reconnaissance in penetration testing?", options: ["The final reporting phase", "The information gathering phase before active testing", "Only physical surveillance", "Celebration after testing"], answer: "B", explanation: "Reconnaissance collects intelligence about the target to plan effective attack strategies during testing."},
+  {q: "What should happen after any audit or assessment?", options: ["Ignore findings", "Formal report with findings and management response plan", "Destroy all evidence", "Celebrate immediately"], answer: "B", explanation: "The value comes from addressing identified issues; reports document findings and management's planned corrective actions."},
+
+// ====== 5.6: Implement security awareness practices ======
+  {q: "What is the primary goal of phishing campaigns in security awareness?", options: ["To trick employees", "To test and improve employee ability to recognize and report phishing", "To gather passwords", "To reduce email usage"], answer: "B", explanation: "Simulated phishing campaigns measure baseline susceptibility, provide teachable moments, and track improvement over time."},
+  {q: "Which action should employees take when they receive a suspicious email?", options: ["Click links to investigate", "Delete it immediately", "Report it to the security team", "Forward it to coworkers"], answer: "C", explanation: "Reporting allows security teams to analyze potential threats, block senders, and warn others—turning users into sensors."},
+  {q: "What does anomalous behavior recognition training help employees identify?", options: ["Only technical glitches", "Unusual activities that might indicate security incidents", "Employee birthdays", "System performance issues"], answer: "B", explanation: "Training helps staff recognize signs of compromise (unusual login times, strange system behavior, unexpected pop-ups)."},
+  {q: "Which guidance is most effective for password management awareness?", options: ["Write passwords on sticky notes", "Use password managers and create unique, strong passwords", "Share passwords with IT for safekeeping", "Use simple memorable passwords"], answer: "B", explanation: "Promoting password managers enables strong, unique passwords without burdening memory or encouraging insecure practices."},
+  {q: "What should initial security awareness training cover?", options: ["Only technical details", "Basic policies, reporting procedures, and essential security practices", "Nothing—training is unnecessary", "Only executive-level information"], answer: "B", explanation: "Onboarding training establishes foundational knowledge of security expectations and how to get help."},
+  {q: "Why include removable media security in awareness training?", options: ["USB drives are obsolete", "Malware can spread via infected devices; sensitive data can be easily stolen", "They're always safe", "They improve performance"], answer: "B", explanation: "Training should cover risks of unknown devices, encryption requirements, and policies for approved media."},
+  {q: "What does operational security (OPSEC) awareness help protect?", options: ["Only classified government data", "Sensitive business information from aggregation by adversaries", "Physical building security only", "Network speed"], answer: "B", explanation: "OPSEC teaches how seemingly harmless information (job titles, projects, travel) can be pieced together by attackers."},
+  {q: "What should recurring security training address?", options: ["Only the same content as initial training", "Evolving threats, new policies, and lessons from recent incidents", "Nothing new", "Only technical staff needs updates"], answer: "B", explanation: "Regular updates keep awareness current, reinforce key concepts, and address emerging threats."},
+  {q: "Why is hybrid/remote work security specifically addressed in awareness?", options: ["It's irrelevant", "Remote environments introduce unique risks (home networks, family access, device security)", "Only office security matters", "Remote work is always more secure"], answer: "B", explanation: "Training must cover secure home setups, VPN use, physical device security, and reporting issues when offsite."},
+  {q: "What does effective security awareness program development require?", options: ["One-time video creation", "Ongoing assessment of needs, engaging content creation, and measurable outcomes", "Only technical expertise", "Large budgets only"], answer: "B", explanation: "Effective programs are continuous, tailored to different roles, use varied formats, and measure behavioral change."},
+  {q: "How should security awareness content be delivered for maximum impact?", options: ["Only long, technical lectures", "Varied formats (short videos, interactive modules, posters, newsletters)", "Only written policies", "Once per year emails"], answer: "B", explanation: "Different people learn differently; varied, engaging content reaches broader audiences and improves retention."},
+  {q: "What should employees know about responding to social engineering attempts?", options: ["Engage to waste attacker's time", "Verify requests through established channels, don't feel pressured, and report", "Provide minimal information to be helpful", "Hang up immediately on all calls"], answer: "B", explanation: "Training should provide practical verification methods (call back on known numbers) and emphasize it's okay to say no."},
+  {q: "Why include insider threat awareness?", options: "To create paranoia among employees", "To help employees recognize concerning behaviors and know how to report concerns confidentially", "Only managers need this training", "Insider threats don't exist"], answer: "B", explanation: "Awareness helps create a culture where employees feel responsible for security and know how to report concerns appropriately."},
+  {q: "What does situational awareness in security context mean?", options: ["Knowing exit locations only", "Being mindful of surroundings (tailgating, shoulder surfing, unfamiliar persons)", "Memorizing policy numbers", "Technical network monitoring"], answer: "B", explanation: "Teaching staff to be observant of physical and digital surroundings helps prevent various security incidents."},
+  {q: "How should awareness training address removable cables (like USB cables)?", options: ["They're always safe", "Malicious cables can compromise devices; use caution with unknown cables", "Only company-issued cables matter", "Cables can't be malicious"], answer: "B", explanation: "'Juice jacking' and malicious charging cables are real threats; training should promote using personal or trusted cables."},
+  {q: "What is the benefit of making security awareness role-specific?", options: "More work to develop", "Relevance increases engagement and addresses unique risks for different jobs", "It's unnecessary", "Only IT needs specific training"], answer: "B", explanation: "Developers need secure coding; HR needs data privacy; executives need fraud awareness—tailored content is more effective."},
+  {q: "Why measure the effectiveness of security awareness programs?", options: ["To justify eliminating them", "To demonstrate ROI, identify gaps, and improve content", "Measurement is impossible", "Only attendance matters"], answer: "B", explanation: "Metrics (phishing click rates, incident reports, knowledge assessments) guide improvements and demonstrate value."},
+  {q: "What should policy/handbooks provide in security awareness?", options: ["Only legal jargon", "Clear, accessible explanations of security expectations and procedures", "They're unnecessary with training", "Only technical specifications"], answer: "B", explanation: "Handbooks serve as ongoing references; they should be user-friendly, not just compliance documents."},
+  {q: "How can organizations encourage security awareness reporting?", options: ["Punish all mistakes", "Create a non-punitive culture where reporting is encouraged and easy", "Ignore all reports", "Only accept perfect reports"], answer: "B", explanation: "If employees fear blame for reporting issues (like clicking phishing links), they won't report, hiding valuable threat intelligence."},
+  {q: "What does 'risky behavior' recognition training help prevent?", options: ["All personal life choices", "Security-compromising actions like password sharing, unauthorized software installation", "Only illegal activities", "Standard business processes"], answer: "B", explanation: "Employees should understand why certain convenient behaviors (sharing credentials, using shadow IT) create organizational risk."},
+];
+    let currentIdx = 0;
+    let score = 0;
+    let answeredCount = 0;
+    let answeredQuestions = new Set();
+
+    const qIdxEl = document.getElementById("qIdx");
+    const qTotalEl = document.getElementById("qTotal");
+    const questionEl = document.getElementById("question");
+    const choicesEl = document.getElementById("choices");
+    const explanationEl = document.getElementById("explanation");
+    const barEl = document.getElementById("bar");
+    const scoreEl = document.getElementById("score");
+    const answeredEl = document.getElementById("answered");
+    const navModal = document.getElementById("nav-modal");
+    const navGrid = document.getElementById("nav-grid");
+    const jumpInput = document.getElementById("jump-input");
+    const jumpBtn = document.getElementById("jump-btn");
+
+    function renderQuestion() {
+      const q = QUESTIONS[currentIdx];
+      qIdxEl.textContent = currentIdx + 1;
+      questionEl.textContent = q.q;
+      choicesEl.innerHTML = "";
+      explanationEl.style.display = "none";
+
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement("button");
+        btn.className = "choice";
+        btn.textContent = `${String.fromCharCode(65+i)}. ${opt}`;
+        btn.addEventListener("click", () => selectAnswer(btn, String.fromCharCode(65+i)));
+        choicesEl.appendChild(btn);
+      });
+
+      updateProgress();
+      updateNavGrid();
+    }
+
+    function selectAnswer(btn, choice) {
+      const q = QUESTIONS[currentIdx];
+      const buttons = choicesEl.querySelectorAll("button");
+      buttons.forEach(b => b.classList.add("disabled"));
+
+      if(choice === q.answer){
+        btn.classList.add("correct");
+        score++;
+      } else {
+        btn.classList.add("wrong");
+        buttons.forEach(b=>{
+          if(b.textContent.startsWith(q.answer)) b.classList.add("correct");
+        });
+      }
+
+      explanationEl.textContent = q.explanation;
+      explanationEl.style.display = "block";
+      answeredCount++;
+      answeredQuestions.add(currentIdx);
+      updateProgress();
+      updateNavGrid();
+    }
+
+    function updateProgress() {
+      barEl.style.width = `${((currentIdx+1)/QUESTIONS.length)*100}%`;
+      scoreEl.textContent = score;
+      answeredEl.textContent = answeredCount;
+    }
+
+    function updateNavGrid() {
+      navGrid.innerHTML = "";
+      for (let i = 0; i < QUESTIONS.length; i++) {
+        const btn = document.createElement("button");
+        btn.className = "nav-btn";
+        btn.textContent = i + 1;
+        
+        if (i === currentIdx) {
+          btn.classList.add("current");
+        }
+        
+        if (answeredQuestions.has(i)) {
+          btn.classList.add("answered");
+        }
+        
+        btn.addEventListener("click", () => {
+          currentIdx = i;
+          renderQuestion();
+          closeNavModal();
+        });
+        
+        navGrid.appendChild(btn);
+      }
+    }
+
+    function openNavModal() {
+      navModal.style.display = "flex";
+      updateNavGrid();
+      jumpInput.value = "";
+    }
+
+    function closeNavModal() {
+      navModal.style.display = "none";
+    }
+
+    function jumpToQuestion() {
+      const questionNum = parseInt(jumpInput.value);
+      if (questionNum >= 1 && questionNum <= QUESTIONS.length) {
+        currentIdx = questionNum - 1;
+        renderQuestion();
+        closeNavModal();
+      } else {
+        alert(`Please enter a number between 1 and ${QUESTIONS.length}`);
+      }
+    }
+
+    // Event listeners
+    document.getElementById("next").addEventListener("click", () => {
+      if(currentIdx < QUESTIONS.length - 1) currentIdx++;
+      renderQuestion();
+    });
+
+    document.getElementById("prev").addEventListener("click", () => {
+      if(currentIdx > 0) currentIdx--;
+      renderQuestion();
+    });
+
+    document.getElementById("restart").addEventListener("click", () => {
+      currentIdx = 0; 
+      score = 0; 
+      answeredCount = 0;
+      answeredQuestions.clear();
+      renderQuestion();
+    });
+
+    document.getElementById("nav-btn").addEventListener("click", openNavModal);
+    document.getElementById("close-nav").addEventListener("click", closeNavModal);
+    jumpBtn.addEventListener("click", jumpToQuestion);
+    jumpInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        jumpToQuestion();
+      }
+    });
+
+    // Close modal when clicking outside
+    navModal.addEventListener("click", (e) => {
+      if (e.target === navModal) {
+        closeNavModal();
+      }
+    });
+
+    // Initialize
+    qTotalEl.textContent = QUESTIONS.length;
+    renderQuestion();
+  </script>
+</body>
+</html>
